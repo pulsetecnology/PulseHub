@@ -1,0 +1,88 @@
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { NextAuthOptions } from "next-auth";
+
+// Mock user database for development
+const users = [
+  {
+    id: "1",
+    name: "Fornecedor Teste",
+    email: "fornecedor@example.com",
+    password: "senha123", // In production, this would be hashed
+    type: "fornecedor",
+  },
+  {
+    id: "2",
+    name: "Revendedor Teste",
+    email: "revendedor@example.com",
+    password: "senha123", // In production, this would be hashed
+    type: "revendedor",
+  },
+];
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Senha", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        // Find user in the mock database
+        const user = users.find(
+          (user) => user.email === credentials.email && user.password === credentials.password
+        );
+
+        if (user) {
+          // Return user without password
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            type: user.type,
+          };
+        }
+
+        return null;
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      // Add user type to token when signing in
+      if (user) {
+        token.type = user.type;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Add user type to session
+      if (session.user) {
+        session.user.id = token.sub as string;
+        session.user.type = token.type as "fornecedor" | "revendedor";
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/login",
+    // signOut: '/auth/signout',
+    // error: '/auth/error',
+    // verifyRequest: '/auth/verify-request',
+    // newUser: '/auth/new-user'
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  secret: process.env.NEXTAUTH_SECRET || "your-secret-key-change-in-production",
+};
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };

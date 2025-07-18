@@ -1,0 +1,34 @@
+{
+  "hooks": [
+    {
+      "name": "Product Registration",
+      "description": "Validates form fields, uploads image to Cloudinary, and stores product data when a supplier submits the product registration form",
+      "trigger": {
+        "type": "manual",
+        "label": "Process Product Registration",
+        "icon": "package"
+      },
+      "prompt": "Process the product registration form by performing these actions:\n1. Validate all form fields\n2. Upload the product image to Cloudinary\n3. Store the product data in the database\n4. Redirect to product listing page\n5. Display success toast notification"
+    },
+    {
+      "name": "Reseller Registration",
+      "description": "Creates a reseller in the database and associates them with the current supplier",
+      "trigger": {
+        "type": "manual",
+        "label": "Process Reseller Registration",
+        "icon": "person-add"
+      },
+      "prompt": "Process the reseller registration by:\n1. Creating the reseller in the database with the provided name and email\n2. Associate the new reseller with the current supplier\n3. Return confirmation of successful registration"
+    },
+    {
+      "name": "Quote Request",
+      "description": "Creates a quote request in the system and optionally notifies the supplier",
+      "trigger": {
+        "type": "manual",
+        "label": "Process Quote Request",
+        "icon": "quote"
+      },
+      "prompt": "Process the quote request by:\n1. Creating a request record in the system with the selected products\n2. Sending a notification to the supplier (if enabled)\n3. Confirm the request has been submitted successfully"
+    }
+  ]
+}

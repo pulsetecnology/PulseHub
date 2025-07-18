@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Quote Request Hook",
+  "description": "Creates a quote request in the system and optionally notifies the supplier when a reseller selects products and requests a quote",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/pages/QuoteRequest.jsx",
+      "src/components/ProductSelection.jsx",
+      "src/services/quoteService.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the quote request implementation. Ensure it:\n1. Properly handles product selection by the reseller\n2. Creates a request record in the system when \"Request Quote\" is clicked\n3. Implements the optional supplier notification feature\n4. Provides appropriate feedback to the reseller after submission\nSuggest improvements or fix any issues found in the implementation."
+  }
+}
