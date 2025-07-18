@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import PulseHubLogo from "@/components/ui/PulseHubLogo";
-import { FiUser, FiShoppingBag } from "react-icons/fi";
 
 export default function Home() {
   const router = useRouter();
@@ -22,58 +20,109 @@ export default function Home() {
   }, [user, router]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24 bg-gray-50 dark:bg-gray-900">
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      backgroundColor: "#f9fafb",
+      fontFamily: "Arial, sans-serif"
+    }}>
       {/* Logo */}
-      <div className="mb-12">
-        <PulseHubLogo size="lg" />
+      <div style={{ marginBottom: "40px", fontWeight: "bold", fontSize: "32px" }}>
+        <span style={{ color: "#2563eb" }}>Pulse</span>
+        <span style={{ color: "#10b981" }}>Hub</span>
       </div>
 
       {/* Título */}
-      <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-white">
+      <h1 style={{ 
+        fontSize: "36px", 
+        fontWeight: "bold", 
+        marginBottom: "16px", 
+        color: "#1f2937",
+        textAlign: "center"
+      }}>
         Bem-vindo ao SPECS
       </h1>
-      <p className="text-xl mb-12 text-gray-600 dark:text-gray-300">
+      <p style={{ 
+        fontSize: "18px", 
+        marginBottom: "40px", 
+        color: "#4b5563",
+        textAlign: "center"
+      }}>
         Sistema de Representantes e Fornecedores
       </p>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto w-full">
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr",
+        gap: "24px",
+        maxWidth: "800px",
+        width: "100%"
+      }}>
         {/* Card Fornecedor */}
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FiShoppingBag className="text-blue-600" size={28} />
-          </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white text-center">Fornecedor</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6 text-center">
+        <div style={{
+          backgroundColor: "white",
+          padding: "32px",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          border: "1px solid #e5e7eb",
+          textAlign: "center"
+        }}>
+          <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px", color: "#1f2937" }}>Fornecedor</h2>
+          <p style={{ color: "#4b5563", marginBottom: "24px" }}>
             Gerencie seus produtos, revendedores e acompanhe pedidos.
           </p>
           <button 
             onClick={() => router.push("/login?type=fornecedor")}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+            style={{
+              backgroundColor: "#2563eb",
+              color: "white",
+              border: "none",
+              padding: "12px 24px",
+              borderRadius: "6px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              width: "100%"
+            }}
           >
-            <span>Entrar como Fornecedor</span>
-            <FiUser className="ml-2" />
+            Entrar como Fornecedor
           </button>
         </div>
 
         {/* Card Revendedor */}
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FiUser className="text-green-600" size={28} />
-          </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white text-center">Revendedor</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6 text-center">
+        <div style={{
+          backgroundColor: "white",
+          padding: "32px",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          border: "1px solid #e5e7eb",
+          textAlign: "center"
+        }}>
+          <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px", color: "#1f2937" }}>Revendedor</h2>
+          <p style={{ color: "#4b5563", marginBottom: "24px" }}>
             Acesse catálogos, solicite orçamentos e faça pedidos.
           </p>
           <button 
             onClick={() => router.push("/login?type=revendedor")}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+            style={{
+              backgroundColor: "#10b981",
+              color: "white",
+              border: "none",
+              padding: "12px 24px",
+              borderRadius: "6px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              width: "100%"
+            }}
           >
-            <span>Entrar como Revendedor</span>
-            <FiUser className="ml-2" />
+            Entrar como Revendedor
           </button>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
