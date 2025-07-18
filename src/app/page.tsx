@@ -3,6 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import PulseHubLogo from "@/components/ui/PulseHubLogo";
+import Button from "@/components/ui/Button";
+import { FiUser, FiShoppingBag } from "react-icons/fi";
 
 export default function Home() {
   const router = useRouter();
@@ -20,109 +23,63 @@ export default function Home() {
   }, [user, router]);
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "20px",
-      backgroundColor: "#f9fafb",
-      fontFamily: "Arial, sans-serif"
-    }}>
-      {/* Logo */}
-      <div style={{ marginBottom: "40px", fontWeight: "bold", fontSize: "32px" }}>
-        <span style={{ color: "#2563eb" }}>Pulse</span>
-        <span style={{ color: "#10b981" }}>Hub</span>
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24 relative bg-gray-50 dark:bg-gray-900">
+      {/* Background decorativo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-500/3 to-green-500/3 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      {/* Título */}
-      <h1 style={{ 
-        fontSize: "36px", 
-        fontWeight: "bold", 
-        marginBottom: "16px", 
-        color: "#1f2937",
-        textAlign: "center"
-      }}>
-        Bem-vindo ao SPECS
-      </h1>
-      <p style={{ 
-        fontSize: "18px", 
-        marginBottom: "40px", 
-        color: "#4b5563",
-        textAlign: "center"
-      }}>
-        Sistema de Representantes e Fornecedores
-      </p>
-
-      {/* Cards */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        gap: "24px",
-        maxWidth: "800px",
-        width: "100%"
-      }}>
-        {/* Card Fornecedor */}
-        <div style={{
-          backgroundColor: "white",
-          padding: "32px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          border: "1px solid #e5e7eb",
-          textAlign: "center"
-        }}>
-          <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px", color: "#1f2937" }}>Fornecedor</h2>
-          <p style={{ color: "#4b5563", marginBottom: "24px" }}>
-            Gerencie seus produtos, revendedores e acompanhe pedidos.
-          </p>
-          <button 
-            onClick={() => router.push("/login?type=fornecedor")}
-            style={{
-              backgroundColor: "#2563eb",
-              color: "white",
-              border: "none",
-              padding: "12px 24px",
-              borderRadius: "6px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              width: "100%"
-            }}
-          >
-            Entrar como Fornecedor
-          </button>
+      <div className="z-10 max-w-5xl w-full items-center justify-center text-center">
+        <div className="mb-12 flex justify-center">
+          <PulseHubLogo size="lg" />
         </div>
 
-        {/* Card Revendedor */}
-        <div style={{
-          backgroundColor: "white",
-          padding: "32px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          border: "1px solid #e5e7eb",
-          textAlign: "center"
-        }}>
-          <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px", color: "#1f2937" }}>Revendedor</h2>
-          <p style={{ color: "#4b5563", marginBottom: "24px" }}>
-            Acesse catálogos, solicite orçamentos e faça pedidos.
-          </p>
-          <button 
-            onClick={() => router.push("/login?type=revendedor")}
-            style={{
-              backgroundColor: "#10b981",
-              color: "white",
-              border: "none",
-              padding: "12px 24px",
-              borderRadius: "6px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              width: "100%"
-            }}
-          >
-            Entrar como Revendedor
-          </button>
+        <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-white">
+          Bem-vindo ao SPECS
+        </h1>
+        <p className="text-xl mb-12 text-gray-600 dark:text-gray-300">
+          Sistema de Representantes e Fornecedores
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiShoppingBag className="text-blue-600" size={28} />
+            </div>
+            <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Fornecedor</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Gerencie seus produtos, revendedores e acompanhe pedidos.
+            </p>
+            <Button 
+              fullWidth 
+              onClick={() => router.push("/login?type=fornecedor")}
+              rightIcon={<FiUser />}
+            >
+              Entrar como Fornecedor
+            </Button>
+          </div>
+
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiUser className="text-green-600" size={28} />
+            </div>
+            <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Revendedor</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Acesse catálogos, solicite orçamentos e faça pedidos.
+            </p>
+            <Button 
+              fullWidth 
+              variant="secondary"
+              onClick={() => router.push("/login?type=revendedor")}
+              rightIcon={<FiUser />}
+            >
+              Entrar como Revendedor
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

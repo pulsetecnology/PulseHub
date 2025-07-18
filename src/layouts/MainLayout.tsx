@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FiHome, FiBox, FiUsers, FiLogOut, FiMenu, FiX, FiShoppingBag, FiFilter, FiTag } from 'react-icons/fi';
-import Button from '@/components/ui/Button';
 import ThemeToggle from '@/components/ThemeToggle';
 import PulseHubLogo from '@/components/ui/PulseHubLogo';
 
@@ -26,7 +25,9 @@ const resellerLinks = [
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const links = user?.type === 'fornecedor' ? supplierLinks : resellerLinks;
+  // Força o tipo para garantir que os links sejam exibidos corretamente
+  const userType = user?.type || 'fornecedor';
+  const links = userType === 'fornecedor' ? supplierLinks : resellerLinks;
 
   const handleLogout = () => {
     logout();
@@ -40,7 +41,7 @@ const Sidebar = () => {
         <div className="flex flex-col items-center">
           <PulseHubLogo size="md" />
           <p className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-2 text-center">
-            {user?.type}
+            {userType}
           </p>
         </div>
       </div>

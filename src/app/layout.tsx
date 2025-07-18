@@ -1,52 +1,31 @@
+import type { Metadata } from "next";
+import { Poppins } from "next/font/google";
+import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ReactNode } from "react";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
-export const metadata = {
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
   title: "SPECS - Sistema de Representantes e Fornecedores",
-  description: "Portal para conectar fornecedores de moda com seus revendedores",
+  description: "Plataforma para revendedores e fornecedores de moda",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: ReactNode;
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-        <style>
-          {`
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: 'Poppins', Arial, sans-serif;
-              line-height: 1.5;
-              color: #333;
-              background-color: #f9fafb;
-            }
-            
-            a {
-              color: #2563eb;
-              text-decoration: none;
-            }
-            
-            button {
-              cursor: pointer;
-            }
-          `}
-        </style>
-      </head>
-      <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={poppins.className}>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
