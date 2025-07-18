@@ -8,9 +8,10 @@ interface ProductCardProps {
   product: Product;
   onDelete?: () => void;
   isSupplier?: boolean;
+  onToggleFeatured?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, isSupplier = true }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, onToggleFeatured, isSupplier = true }) => {
   // Calcular o valor da comissão se disponível
   const commissionValue = product.commission 
     ? (product.price * (product.commission / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

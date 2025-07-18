@@ -61,7 +61,7 @@
     - Testar fluxos de autenticação
     - _Requirements: 1.3, 1.7_
 
-  - [ ] 2.5 Implementar gerenciamento de perfil
+  - [x] 2.5 Implementar gerenciamento de perfil
     - Criar página de perfil do usuário
     - Implementar formulário de edição de dados
     - Adicionar funcionalidade de upload de avatar
@@ -75,7 +75,10 @@
     - Adicionar estrutura base para widgets de resumo
     - _Requirements: 2.1_
 
-  - [ ] 3.2 Implementar listagem de produtos
+  - [x] 3.2 Implementar listagem de produtos
+
+
+
     - Criar tabela de produtos com paginação
     - Adicionar funcionalidades de busca e filtro
     - Implementar ações rápidas (editar, excluir)
@@ -102,13 +105,13 @@
     - _Requirements: 2.7_
 
 - [ ] 4. Área do fornecedor - Gerenciamento de revendedores
-  - [ ] 4.1 Implementar listagem de revendedores
+  - [x] 4.1 Implementar listagem de revendedores
     - Criar tabela de revendedores com paginação
     - Adicionar funcionalidades de busca e filtro
     - Implementar ações rápidas (editar, desativar)
     - _Requirements: 3.1_
 
-  - [ ] 4.2 Implementar formulário de cadastro de revendedor
+  - [x] 4.2 Implementar formulário de cadastro de revendedor
     - Criar formulário com validação
     - Implementar geração de convite por email
     - Adicionar campos para informações de contato
@@ -134,13 +137,13 @@
     - Adicionar estrutura base para widgets de resumo
     - _Requirements: 4.1_
 
-  - [ ] 5.2 Implementar catálogo de produtos
+  - [x] 5.2 Implementar catálogo de produtos
     - Criar grid de produtos com paginação
     - Implementar visualização em lista e cards
     - Adicionar indicadores de produtos novos/destaque
     - _Requirements: 4.1, 4.6_
 
-  - [ ] 5.3 Implementar filtros e busca
+  - [x] 5.3 Implementar filtros e busca
     - Criar componentes de filtro por categoria
     - Implementar filtros por tamanho e preço
     - Adicionar campo de busca com sugestões
