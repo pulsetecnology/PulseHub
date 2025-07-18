@@ -1,21 +1,35 @@
 import "next-auth";
-import { DefaultSession } from "next-auth";
+import { UserType } from "@/contexts/AuthContextWithNextAuth";
 
 declare module "next-auth" {
+  /**
+   * Estendendo o tipo User do NextAuth
+   */
   interface User {
-    type: "fornecedor" | "revendedor";
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    type: UserType;
   }
 
+  /**
+   * Estendendo o tipo Session do NextAuth
+   */
   interface Session {
     user: {
       id: string;
-      type: "fornecedor" | "revendedor";
-    } & DefaultSession["user"];
+      name?: string | null;
+      email?: string | null;
+      type: UserType;
+    };
   }
 }
 
 declare module "next-auth/jwt" {
+  /**
+   * Estendendo o tipo JWT do NextAuth
+   */
   interface JWT {
-    type: "fornecedor" | "revendedor";
+    type: UserType;
   }
 }

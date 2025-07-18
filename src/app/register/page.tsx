@@ -64,12 +64,15 @@ export default function RegisterPage() {
         setError("Erro ao fazer login automático. Por favor, faça login manualmente.");
         router.push("/login?registered=true");
       } else {
+        // Aguardar um momento para a sessão ser atualizada
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Redirect based on user type
         router.push(formData.userType === "fornecedor" ? "/supplier/dashboard" : "/reseller/dashboard");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Registration error:", err);
-      setError("Ocorreu um erro durante o cadastro. Por favor, tente novamente.");
+      setError(err.message || "Ocorreu um erro durante o cadastro. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -142,6 +145,11 @@ export default function RegisterPage() {
                   <option value="revendedor">Revendedor</option>
                   <option value="fornecedor">Fornecedor</option>
                 </select>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {formData.userType === "fornecedor" 
+                    ? "Como fornecedor, você poderá cadastrar produtos e gerenciar revendedores." 
+                    : "Como revendedor, você terá acesso ao catálogo de produtos dos fornecedores."}
+                </p>
               </div>
               
               <div>

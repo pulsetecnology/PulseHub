@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
-import { FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiEye, FiPercent, FiTag } from 'react-icons/fi';
 import { Product } from '@/types/product';
 
 interface ProductCardProps {
@@ -11,8 +11,21 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, isSupplier = true }) => {
+  // Calcular o valor da comissão se disponível
+  const commissionValue = product.commission 
+    ? (product.price * (product.commission / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : null;
+
   return (
     <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md p-4 hover:shadow-lg transition flex flex-col justify-between">
+      {product.featured && (
+        <div className="absolute top-2 right-2 z-10">
+          <span className="bg-yellow-400 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
+            Destaque
+          </span>
+        </div>
+      )}
+      
       <Link href={isSupplier ? `/supplier/products/${product.id}` : `/reseller/products/${product.id}`}>
         <div className="cursor-pointer">
           <div className="relative w-full h-48 mb-2">
@@ -24,12 +37,46 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, isSupplier
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
+          
           <h3 className="text-lg font-semibold mt-2 text-gray-800 dark:text-white">{product.name}</h3>
+          
+          {!isSupplier && product.supplierName && (
+            <div className="flex items-center mt-1 mb-1">
+              <FiTag className="text-gray-400 mr-1" size={14} />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {product.supplierName}
+              </p>
+            </div>
+          )}
+          
           <p className="text-gray-500 dark:text-gray-400 text-left">
             {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </p>
+          
+          {!isSupplier && product.commission && (
+            <div className="flex items-center mt-1 text-green-600 dark:text-green-400">
+              <FiPercent className="mr-1" size={14} />
+              <p className="text-sm">
+                Comissão: {product.commission}% ({commissionValue})
+              </p>
+            </div>
+          )}
+          
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {product.sizes.map((size) => (
+                <span 
+                  key={size} 
+                  className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"
+                >
+                  {size}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </Link>
+      
       {isSupplier && (
         <div className="flex justify-end space-x-2 mt-4">
           <Link href={`/supplier/products/${product.id}/edit`}>
@@ -47,6 +94,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, isSupplier
           )}
         </div>
       )}
+      
       {!isSupplier && (
         <div className="flex justify-end space-x-2 mt-4">
           <Link href={`/reseller/products/${product.id}`}>

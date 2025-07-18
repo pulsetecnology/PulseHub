@@ -52,7 +52,10 @@
     - Implementar página de recuperação de senha
     - _Requirements: 1.1, 1.2, 1.6_
 
-  - [ ] 2.4 Implementar middleware de proteção de rotas
+  - [x] 2.4 Implementar middleware de proteção de rotas
+
+
+
     - Criar middleware para verificar autenticação
     - Implementar redirecionamento baseado em roles
     - Testar fluxos de autenticação

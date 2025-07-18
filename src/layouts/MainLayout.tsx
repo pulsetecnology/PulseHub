@@ -65,7 +65,26 @@ const Sidebar = () => {
 
       {/* User Actions */}
       <div className="p-4 border-t border-gray-100 dark:border-gray-700/50">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-3">
+          {/* User Profile */}
+          <Link 
+            href="/profile" 
+            className="flex items-center p-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 transition-all duration-200"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white text-sm font-bold mr-3">
+              {user?.name?.charAt(0) || "U"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
+                {user?.name || "Usuário"}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                Ver perfil
+              </p>
+            </div>
+          </Link>
+          
+          {/* Actions */}
           <div className="flex items-center gap-2">
             <button
               onClick={handleLogout}

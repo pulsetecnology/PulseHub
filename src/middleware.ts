@@ -2,59 +2,114 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+// Define tipos de usuário para melhor tipagem
+type UserType = "fornecedor" | "revendedor";
+
+// Define rotas públicas que não precisam de autenticação
+const publicRoutes = ["/", "/about", "/contact", "/terms", "/privacy"];
+
+// Define rotas de autenticação
+const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"];
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Obter token JWT da sessão
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  // Verificar autenticação e tipo de usuário
   const isAuthenticated = !!token;
-  const isAuthPage = 
-    request.nextUrl.pathname.startsWith("/login") || 
-    request.nextUrl.pathname.startsWith("/register") ||
-    request.nextUrl.pathname.startsWith("/forgot-password");
+  const userType = token?.type as UserType | undefined;
+  const isAuthPage = authRoutes.some(route => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some(route => pathname === route);
 
-  // Redirect authenticated users away from auth pages
+  // 1. Redirecionar usuários autenticados para fora das páginas de autenticação
   if (isAuthenticated && isAuthPage) {
-    const redirectUrl = token.type === "fornecedor" 
-      ? "/supplier/dashboard" 
-      : "/reseller/dashboard";
-    
-    return NextResponse.redirect(new URL(redirectUrl, request.url));
+    const dashboardUrl = getDashboardUrl(userType);
+    return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
 
-  // Protect supplier routes
-  if (
-    request.nextUrl.pathname.startsWith("/supplier") &&
-    (!isAuthenticated || token.type !== "fornecedor")
-  ) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // 2. Proteger rotas específicas de fornecedor
+  if (pathname.startsWith("/supplier")) {
+    if (!isAuthenticated) {
+      // Usuário não autenticado - redirecionar para login com URL de retorno
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    } else if (userType !== "fornecedor") {
+      // Usuário autenticado mas não é fornecedor - redirecionar para dashboard apropriado
+      const dashboardUrl = getDashboardUrl(userType);
+      return NextResponse.redirect(new URL(dashboardUrl, request.url));
+    }
   }
 
-  // Protect reseller routes
-  if (
-    request.nextUrl.pathname.startsWith("/reseller") &&
-    (!isAuthenticated || token.type !== "revendedor")
-  ) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // 3. Proteger rotas específicas de revendedor
+  if (pathname.startsWith("/reseller")) {
+    if (!isAuthenticated) {
+      // Usuário não autenticado - redirecionar para login com URL de retorno
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    } else if (userType !== "revendedor") {
+      // Usuário autenticado mas não é revendedor - redirecionar para dashboard apropriado
+      const dashboardUrl = getDashboardUrl(userType);
+      return NextResponse.redirect(new URL(dashboardUrl, request.url));
+    }
   }
 
-  // Redirect unauthenticated users to login page if they try to access protected routes
-  if (!isAuthenticated && !isAuthPage && request.nextUrl.pathname !== "/") {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // 4. Proteger rotas de perfil
+  if (pathname.startsWith("/profile")) {
+    if (!isAuthenticated) {
+      // Usuário não autenticado - redirecionar para login
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
+  // 5. Proteger outras rotas privadas (não públicas e não de autenticação)
+  if (!isAuthenticated && !isAuthPage && !isPublicRoute) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Permitir a requisição continuar
   return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
+// Função auxiliar para obter a URL do dashboard com base no tipo de usuário
+function getDashboardUrl(userType?: UserType): string {
+  switch (userType) {
+    case "fornecedor":
+      return "/supplier/dashboard";
+    case "revendedor":
+      return "/reseller/dashboard";
+    default:
+      return "/login"; // Fallback para login se o tipo for desconhecido
+  }
+}
+
+// Configuração de rotas para o middleware
 export const config = {
   matcher: [
-    "/supplier/:path*", 
-    "/reseller/:path*", 
-    "/login", 
+    // Rotas de autenticação
+    "/login",
     "/register", 
     "/forgot-password",
-    "/profile",
+    "/reset-password",
+    
+    // Rotas protegidas
+    "/supplier/:path*", 
+    "/reseller/:path*", 
+    "/profile/:path*",
+    "/orders/:path*",
+    "/catalog/:path*",
+    "/settings/:path*",
+    
+    // Adicionar outras rotas protegidas conforme necessário
   ],
 };

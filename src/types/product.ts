@@ -28,6 +28,10 @@ export interface Product {
   targetAudiences?: TargetAudience[]; // Múltiplos públicos-alvo
   createdAt?: Date;
   updatedAt?: Date;
+  supplierId?: string; // ID do fornecedor que cadastrou o produto
+  supplierName?: string; // Nome do fornecedor que cadastrou o produto
+  commission?: number; // Comissão do revendedor para este produto
+  featured?: boolean; // Indica se o produto é destaque
 }
 
 // Constantes para uso em toda a aplicação
