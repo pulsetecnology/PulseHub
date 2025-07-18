@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import ProductCard from "@/components/ProductCard";
 import { FiSearch, FiFilter, FiShoppingBag } from "react-icons/fi";
@@ -46,7 +46,7 @@ const mockProducts: Product[] = [
 
 export default function ResellerDashboard() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user } = useNextAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState<Product[]>(mockProducts);
 

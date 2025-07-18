@@ -2,6 +2,7 @@
 
 import { useState, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNextAuth } from '@/hooks/useNextAuth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FiHome, FiBox, FiUsers, FiLogOut, FiMenu, FiX, FiShoppingBag, FiFilter, FiTag } from 'react-icons/fi';
@@ -23,15 +24,15 @@ const resellerLinks = [
 ];
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout } = useNextAuth();
   const router = useRouter();
   // Força o tipo para garantir que os links sejam exibidos corretamente
   const userType = user?.type || 'fornecedor';
   const links = userType === 'fornecedor' ? supplierLinks : resellerLinks;
 
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
+  const handleLogout = async () => {
+    await logout();
+    // O redirecionamento já é feito dentro do método logout do useNextAuth
   };
 
   return (
@@ -84,7 +85,7 @@ const Sidebar = () => {
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user } = useNextAuth();
   const router = useRouter();
 
   if (!user) {

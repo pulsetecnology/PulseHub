@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import { FiBox, FiUsers, FiShoppingBag, FiTrendingUp } from "react-icons/fi";
 
 export default function SupplierDashboard() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user } = useNextAuth();
 
   useEffect(() => {
     // Redireciona se não estiver autenticado ou não for fornecedor

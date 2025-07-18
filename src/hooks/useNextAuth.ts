@@ -16,13 +16,24 @@ export function useNextAuth() {
       });
 
       if (result?.error) {
+        // Traduzir mensagens de erro comuns
+        if (result.error === "CredentialsSignin") {
+          return { success: false, error: "Email ou senha incorretos. Por favor, tente novamente." };
+        }
         return { success: false, error: result.error };
       }
 
+      // Aguardar um momento para a sessão ser atualizada
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Obter a sessão atualizada
+      const updatedSession = await fetch('/api/auth/session');
+      const sessionData = await updatedSession.json();
+      
       // Redirect based on user type
-      if (session?.user?.type === "fornecedor") {
+      if (sessionData?.user?.type === "fornecedor") {
         router.push("/supplier/dashboard");
-      } else if (session?.user?.type === "revendedor") {
+      } else if (sessionData?.user?.type === "revendedor") {
         router.push("/reseller/dashboard");
       } else {
         // Refresh to get the session

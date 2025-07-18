@@ -41,7 +41,12 @@
     - Migrar do AuthContext básico para NextAuth
     - _Requirements: 1.1, 1.3_
 
-  - [ ] 2.3 Criar páginas de autenticação
+  - [x] 2.3 Criar páginas de autenticação
+
+
+
+
+
     - Implementar página de login
     - Implementar página de cadastro
     - Implementar página de recuperação de senha

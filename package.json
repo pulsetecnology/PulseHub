@@ -1,5 +1,5 @@
 {
-  "name": "specs-portal",
+  "name": "pulsehub-portal",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,23 +10,23 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
-    "next": "15.4.1",
+    "autoprefixer": "^10.4.16",
+    "next": "^13.5.6",
     "next-auth": "^4.24.11",
-    "react": "19.1.0",
+    "postcss": "^8.4.31",
+    "react": "^18.2.0",
     "react-currency-input-field": "^3.10.0",
-    "react-dom": "19.1.0",
-    "react-icons": "^5.5.0"
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0",
+    "tailwindcss": "^3.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9",
-    "eslint-config-next": "15.4.1",
-    "postcss": "^8",
-    "tailwindcss": "^4",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "13.5.6",
     "typescript": "^5"
   }
 }

@@ -12,15 +12,15 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "SPECS - Sistema de Representantes e Fornecedores",
+  title: "PulseHub - Sistema de Representantes e Fornecedores",
   description: "Plataforma para revendedores e fornecedores de moda",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={poppins.className}>

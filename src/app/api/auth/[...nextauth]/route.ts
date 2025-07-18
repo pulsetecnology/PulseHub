@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 
 // Mock user database for development
-const users = [
+export const users = [
   {
     id: "1",
     name: "Fornecedor Teste",
@@ -19,6 +19,20 @@ const users = [
     type: "revendedor",
   },
 ];
+
+// Function to register a new user (for development purposes)
+export function registerUser(name: string, email: string, password: string, type: "fornecedor" | "revendedor") {
+  const newUser = {
+    id: (users.length + 1).toString(),
+    name,
+    email,
+    password,
+    type,
+  };
+  
+  users.push(newUser);
+  return newUser;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -71,10 +85,10 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
-    // signOut: '/auth/signout',
-    // error: '/auth/error',
-    // verifyRequest: '/auth/verify-request',
-    // newUser: '/auth/new-user'
+    signOut: "/login",
+    error: "/login",
+    verifyRequest: "/login",
+    newUser: "/register",
   },
   session: {
     strategy: "jwt",
