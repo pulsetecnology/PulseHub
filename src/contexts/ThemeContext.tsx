@@ -13,9 +13,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
+  const [mounted, setMounted] = useState(false);
 
   // Inicializa o tema a partir do localStorage ou preferência do sistema
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme') as Theme | null;
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -40,6 +42,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('theme', newTheme);
     }
   };
+
+  // Evita problemas de hidratação
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
