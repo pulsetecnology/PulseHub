@@ -6,87 +6,80 @@ import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiEdit, FiTrash2, FiStar, FiTag, FiPackage, FiDollarSign, FiCalendar } from "react-icons/fi";
 import Link from "next/link";
-import { Product } from "@/types/product";
-
-// Dados mockados para demonstração
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: "Camiseta Básica",
-    description: "Camiseta 100% algodão, corte regular, gola redonda. Peça versátil e confortável para o dia a dia. Disponível em várias cores e tamanhos.",
-    price: 49.90,
-    imageUrls: [
-      "https://via.placeholder.com/800x600?text=Camiseta+Frente",
-      "https://via.placeholder.com/800x600?text=Camiseta+Costas",
-      "https://via.placeholder.com/800x600?text=Camiseta+Detalhe"
-    ],
-    sizes: ["P", "M", "G"],
-    featured: false,
-    createdAt: new Date("2023-05-15"),
-    updatedAt: new Date("2023-06-10"),
-  },
-  {
-    id: 2,
-    name: "Calça Jeans",
-    description: "Calça jeans slim fit, 98% algodão e 2% elastano. Confortável e durável, ideal para uso casual.",
-    price: 129.90,
-    imageUrls: [
-      "https://via.placeholder.com/800x600?text=Calça+Frente",
-      "https://via.placeholder.com/800x600?text=Calça+Costas"
-    ],
-    sizes: ["38", "40", "42"],
-    featured: true,
-    createdAt: new Date("2023-04-20"),
-    updatedAt: new Date("2023-06-05"),
-  },
-];
+import { DbProduct } from "@/types/product";
 
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = Number(params.id);
   const { user } = useNextAuth();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<DbProduct | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Carregar dados do produto
   useEffect(() => {
-    // Simulação de busca de produto por ID
-    const foundProduct = mockProducts.find(p => p.id === productId);
-    if (foundProduct) {
-      setProduct(foundProduct);
-      if (foundProduct.imageUrls && foundProduct.imageUrls.length > 0) {
-        setSelectedImage(foundProduct.imageUrls[0]);
+    if (!productId) return;
+
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`/api/products/${productId}`);
+        if (!res.ok) throw new Error("Produto não encontrado");
+        const fetchedProduct: DbProduct = await res.json();
+        setProduct(fetchedProduct);
+        if (fetchedProduct.imageUrls) {
+          const images = fetchedProduct.imageUrls.split('[IMAGE]');
+          if (images.length > 0) {
+            setSelectedImage(images[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar produto:", error);
+        alert("Produto não encontrado.");
+        router.push("/supplier/products");
       }
-    } else {
-      // Produto não encontrado
-      alert("Produto não encontrado");
-      router.push("/supplier/products");
-    }
+    };
+
+    fetchProduct();
   }, [productId, router]);
 
-  const handleDeleteProduct = () => {
+  const handleDeleteProduct = async () => {
     if (confirm("Tem certeza que deseja excluir este produto?")) {
-      // Simulação de exclusão
-      alert("Produto excluído com sucesso!");
-      router.push("/supplier/products");
+      try {
+        const res = await fetch(`/api/products/${productId}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) throw new Error('Falha ao excluir produto');
+        alert("Produto excluído com sucesso!");
+        router.push("/supplier/products");
+      } catch (error) {
+        console.error(error);
+        alert('Ocorreu um erro ao excluir o produto.');
+      }
     }
   };
 
-  const handleToggleFeatured = () => {
+  const handleToggleFeatured = async () => {
     if (product) {
-      setProduct({
-        ...product,
-        featured: !product.featured
-      });
-      // Simulação de atualização
-      alert(product.featured ? "Produto removido dos destaques!" : "Produto adicionado aos destaques!");
+      try {
+        const res = await fetch(`/api/products/${productId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ featured: !product.featured }),
+        });
+        if (!res.ok) throw new Error('Falha ao atualizar destaque');
+        setProduct(prev => prev ? { ...prev, featured: !prev.featured } : null);
+        alert(product.featured ? "Produto removido dos destaques!" : "Produto adicionado aos destaques!");
+      } catch (error) {
+        console.error(error);
+        alert('Ocorreu um erro ao atualizar o destaque do produto.');
+      }
     }
   };
 
   if (!user || user.type !== "fornecedor" || !product) {
     return null;
   }
+
+  const productImages = product.imageUrls ? product.imageUrls.split('[IMAGE]') : [];
 
   return (
     <MainLayout>
@@ -140,9 +133,9 @@ export default function ProductDetailPage() {
             </div>
             
             {/* Miniaturas */}
-            {product.imageUrls && product.imageUrls.length > 1 && (
+            {productImages.length > 1 && (
               <div className="flex space-x-2 overflow-x-auto pb-2">
-                {product.imageUrls.map((url, index) => (
+                {productImages.map((url, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(url)}
@@ -189,7 +182,7 @@ export default function ProductDetailPage() {
                   <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">Tamanhos disponíveis</h3>
                     <div className="flex flex-wrap gap-2">
-                      {product.sizes.map(size => (
+                      {product.sizes.split(',').map(size => (
                         <span
                           key={size}
                           className="inline-block px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"
@@ -210,7 +203,7 @@ export default function ProductDetailPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Categoria</p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300">Roupas</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{product.category}</p>
                       </div>
                     </div>
                     <div className="flex items-center">

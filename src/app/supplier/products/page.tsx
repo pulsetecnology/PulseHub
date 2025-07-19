@@ -1,89 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useNextAuth } from "@/hooks/useNextAuth";
-import MainLayout from "@/layouts/MainLayout";
-import { FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiEdit, FiTrash2, FiStar } from "react-icons/fi";
-import { Product } from "@/types/product";
-import ProductCard from "@/components/ProductCard";
-import Link from "next/link";
-
-// Dados mockados para demonstração
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: "Camiseta Básica",
-    description: "Camiseta 100% algodão",
-    price: 49.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Camiseta"],
-    sizes: ["P", "M", "G"],
-    featured: false,
-  },
-  {
-    id: 2,
-    name: "Calça Jeans",
-    description: "Calça jeans slim",
-    price: 129.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Calça"],
-    sizes: ["38", "40", "42"],
-    featured: true,
-  },
-  {
-    id: 3,
-    name: "Tênis Casual",
-    description: "Tênis casual confortável",
-    price: 199.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Tênis"],
-    sizes: ["39", "40", "41"],
-    featured: false,
-  },
-  {
-    id: 4,
-    name: "Vestido Floral",
-    description: "Vestido estampado floral",
-    price: 159.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Vestido"],
-    sizes: ["P", "M", "G"],
-    featured: true,
-  },
-  {
-    id: 5,
-    name: "Camisa Social",
-    description: "Camisa social de algodão",
-    price: 89.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Camisa"],
-    sizes: ["P", "M", "G", "GG"],
-    featured: false,
-  },
-  {
-    id: 6,
-    name: "Sapato Social",
-    description: "Sapato social em couro",
-    price: 249.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Sapato"],
-    sizes: ["38", "39", "40", "41", "42"],
-    featured: false,
-  },
-  {
-    id: 7,
-    name: "Blusa Feminina",
-    description: "Blusa feminina em tecido leve",
-    price: 79.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Blusa"],
-    sizes: ["P", "M", "G"],
-    featured: false,
-  },
-  {
-    id: 8,
-    name: "Jaqueta Jeans",
-    description: "Jaqueta jeans oversized",
-    price: 189.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Jaqueta"],
-    sizes: ["P", "M", "G"],
-    featured: false,
-  },
-];
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useNextAuth } from '@/hooks/useNextAuth';
+import MainLayout from '@/layouts/MainLayout';
+import { FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiEdit, FiTrash2, FiStar } from 'react-icons/fi';
+import { DbProduct } from '@/types/product'; // Usar DbProduct
+import ProductCard from '@/components/ProductCard';
+import Link from 'next/link';
 
 // Opções de filtro para categorias
 const categoryOptions = [
@@ -97,7 +21,8 @@ export default function ProductsPage() {
   const router = useRouter();
   const { user } = useNextAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const [products, setProducts] = useState<DbProduct[]>([]); // Usar DbProduct
+  const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -106,22 +31,37 @@ export default function ProductsPage() {
   const productsPerPage = 8;
 
   useEffect(() => {
-    // Redireciona se não estiver autenticado ou não for fornecedor
     if (!user) {
       router.push("/login?type=fornecedor");
     } else if (user.type !== "fornecedor") {
       router.push("/");
+    } else {
+      fetchProducts();
     }
   }, [user, router]);
 
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Falha ao buscar produtos');
+      const data: DbProduct[] = await res.json();
+      setProducts(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Filtra produtos com base nos critérios
   const filteredProducts = products.filter(product => {
-    const matchesSearch = 
+    const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       false;
     
-    const matchesCategory = selectedCategory === "all" || true; // Implementar quando tivermos categorias
+    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     
     const matchesFeatured = showFeaturedOnly ? product.featured : true;
     
@@ -142,20 +82,34 @@ export default function ProductsPage() {
     router.push("/supplier/products/add");
   };
 
-  const handleDeleteProduct = (productId: number) => {
+  const handleDeleteProduct = async (productId: number) => {
     if (confirm("Tem certeza que deseja excluir este produto?")) {
-      setProducts(prev => prev.filter(product => product.id !== productId));
+      try {
+        const res = await fetch(`/api/products/${productId}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) throw new Error('Falha ao excluir produto');
+        fetchProducts(); // Atualiza a lista
+      } catch (error) {
+        console.error(error);
+        alert('Ocorreu um erro ao excluir o produto.');
+      }
     }
   };
 
-  const handleToggleFeatured = (productId: number) => {
-    setProducts(prev => 
-      prev.map(product => 
-        product.id === productId 
-          ? { ...product, featured: !product.featured } 
-          : product
-      )
-    );
+  const handleToggleFeatured = async (productId: number, currentFeatured: boolean) => {
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured: !currentFeatured }),
+      });
+      if (!res.ok) throw new Error('Falha ao atualizar destaque');
+      fetchProducts(); // Atualiza a lista
+    } catch (error) {
+      console.error(error);
+      alert('Ocorreu um erro ao atualizar o destaque do produto.');
+    }
   };
 
   if (!user || user.type !== "fornecedor") {
@@ -225,7 +179,7 @@ export default function ProductsPage() {
           <div className="relative">
             <button 
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+              className="flex items-center justify-center px-4 py-2 bg-white dark:bg-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
             >
               <FiFilter className="mr-2" />
               Filtros
@@ -295,15 +249,33 @@ export default function ProductsPage() {
         </div>
 
         {/* Visualização em Grade */}
-        {viewMode === "grid" && (
+        {isLoading ? (
+          <p>Carregando produtos...</p>
+        ) : filteredProducts.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+            <div className="text-gray-500 dark:text-gray-400 mb-4">
+              Nenhum produto encontrado.
+            </div>
+            <button
+              onClick={handleAddProduct}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
+            >
+              Adicionar Produto
+            </button>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {currentProducts.map(product => (
               <div key={product.id} className="relative">
                 <ProductCard
-                  product={product}
+                  product={{
+                    ...product,
+                    imageUrls: product.imageUrls.split('[IMAGE]'), // Dividir as URLs
+                    sizes: product.sizes ? product.sizes.split(',') : [],
+                  }}
                   onDelete={() => handleDeleteProduct(product.id)}
                   isSupplier={true}
-                  onToggleFeatured={() => handleToggleFeatured(product.id)}
+                  onToggleFeatured={() => handleToggleFeatured(product.id, product.featured)}
                 />
               </div>
             ))}
@@ -311,7 +283,7 @@ export default function ProductsPage() {
         )}
 
         {/* Visualização em Tabela */}
-        {viewMode === "table" && (
+        {viewMode === "table" && filteredProducts.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -340,9 +312,9 @@ export default function ProductsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
-                            {product.imageUrls && product.imageUrls.length > 0 ? (
+                            {product.imageUrls && product.imageUrls.split('[IMAGE]').length > 0 ? (
                               <img
-                                src={product.imageUrls[0]}
+                                src={product.imageUrls.split('[IMAGE]')[0]}
                                 alt={product.name}
                                 className="h-10 w-10 object-cover"
                               />
@@ -370,7 +342,7 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-wrap gap-1">
-                          {product.sizes?.map((size) => (
+                          {product.sizes?.split(',').map((size) => (
                             <span
                               key={size}
                               className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"
@@ -387,7 +359,7 @@ export default function ProductsPage() {
                           </span>
                         ) : (
                           <button
-                            onClick={() => handleToggleFeatured(product.id)}
+                            onClick={() => handleToggleFeatured(product.id, product.featured)}
                             className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             Marcar destaque
@@ -451,21 +423,6 @@ export default function ProductsPage() {
                 Próxima
               </button>
             </nav>
-          </div>
-        )}
-
-        {/* Mensagem quando não há produtos */}
-        {filteredProducts.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
-            <div className="text-gray-500 dark:text-gray-400 mb-4">
-              Nenhum produto encontrado.
-            </div>
-            <button
-              onClick={handleAddProduct}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
-            >
-              Adicionar Produto
-            </button>
           </div>
         )}
 

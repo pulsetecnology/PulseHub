@@ -12,6 +12,9 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, onToggleFeatured, isSupplier = true }) => {
+  // Certificar que imageUrls é um array
+  const imageUrls = Array.isArray(product.imageUrls) ? product.imageUrls : product.imageUrls.split('[IMAGE]');
+
   // Calcular o valor da comissão se disponível
   const commissionValue = product.commission 
     ? (product.price * (product.commission / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

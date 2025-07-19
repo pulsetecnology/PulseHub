@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import { FiBox, FiUsers, FiShoppingBag, FiTrendingUp } from "react-icons/fi";
+import Link from "next/link";
 
 export default function SupplierDashboard() {
   const router = useRouter();

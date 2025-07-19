@@ -23,17 +23,16 @@ const InputBRL: React.FC<InputBRLProps> = ({
 }) => {
   // Estado interno para controlar o valor formatado
   const [displayValue, setDisplayValue] = useState('');
+  // Estado para armazenar o valor em centavos (como nas maquininhas de cartão)
+  const [centavos, setCentavos] = useState<string>('');
 
   // Função para formatar o valor como moeda brasileira
-  const formatAsCurrency = (value: string): string => {
-    // Remover todos os caracteres não numéricos
-    let numericValue = value.replace(/\D/g, '');
-    
+  const formatAsCurrency = (centavosValue: string): string => {
     // Se não houver valor, retornar vazio
-    if (!numericValue) return '';
+    if (!centavosValue || centavosValue === '0') return '';
     
     // Converter para número e dividir por 100 para obter o valor em reais
-    const floatValue = parseInt(numericValue) / 100;
+    const floatValue = parseInt(centavosValue) / 100;
     
     // Formatar como moeda brasileira
     return floatValue.toLocaleString('pt-BR', {
@@ -44,42 +43,69 @@ const InputBRL: React.FC<InputBRLProps> = ({
     });
   };
 
-  // Função para extrair o valor numérico da string formatada
-  const extractNumericValue = (formattedValue: string): string => {
-    // Remover todos os caracteres não numéricos
-    const numericValue = formattedValue.replace(/\D/g, '');
-    
-    // Converter para número e dividir por 100 para obter o valor em reais
-    const floatValue = parseInt(numericValue || '0') / 100;
-    
-    // Retornar como string
-    return floatValue.toString();
-  };
-
   // Atualizar o valor formatado quando o valor externo mudar
   useEffect(() => {
     if (value) {
       // Converter o valor para centavos
-      const cents = Math.round(parseFloat(value) * 100);
-      setDisplayValue(formatAsCurrency((cents || 0).toString()));
+      const cents = Math.round(parseFloat(value) * 100).toString();
+      setCentavos(cents);
+      setDisplayValue(formatAsCurrency(cents));
     } else {
+      setCentavos('');
       setDisplayValue('');
     }
   }, [value]);
 
-  // Manipular mudanças no input
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
+  // Lida com o colar de valores
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text');
+    const numericValue = pastedText.replace(/\D/g, '');
+
+    if (numericValue) {
+      const newValue = numericValue.slice(0, 10); // Limita o tamanho
+      setCentavos(newValue);
+      setDisplayValue(formatAsCurrency(newValue));
+      const floatValue = parseInt(newValue) / 100;
+      onChange(floatValue.toString());
+    }
+  };
+
+  // Manipular teclas pressionadas para implementar o comportamento de maquininha
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const { key } = e;
+    const isNumericKey = /^\d$/.test(key);
+    const isControlKey = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key);
+    const isCopyPaste = (e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(key.toLowerCase());
+
+    if (isControlKey || isCopyPaste) {
+      if (key === 'Backspace') {
+        e.preventDefault();
+        if (centavos.length > 0) {
+          const newValue = centavos.slice(0, -1);
+          setCentavos(newValue);
+          const floatValue = parseInt(newValue || '0') / 100;
+          setDisplayValue(formatAsCurrency(newValue));
+          onChange(newValue ? floatValue.toString() : '');
+        }
+      }
+      return;
+    }
+
+    if (!isNumericKey) {
+      e.preventDefault();
+      return;
+    }
     
-    // Remover formatação e manter apenas números
-    const numericValue = inputValue.replace(/\D/g, '');
-    
-    // Formatar o valor para exibição
-    const formattedValue = formatAsCurrency(numericValue);
-    setDisplayValue(formattedValue);
-    
-    // Notificar o componente pai com o valor numérico
-    onChange(extractNumericValue(formattedValue));
+    e.preventDefault();
+    const newValue = centavos + key;
+
+    if (newValue.length <= 10) {
+      setCentavos(newValue);
+      setDisplayValue(formatAsCurrency(newValue));
+      const floatValue = parseInt(newValue) / 100;
+      onChange(floatValue.toString());
+    }
   };
 
   return (
@@ -87,13 +113,16 @@ const InputBRL: React.FC<InputBRLProps> = ({
       <input
         type="text"
         value={displayValue}
-        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        onChange={() => {}} // onChange é necessário para alguns navegadores/dispositivos, mas a lógica está no onKeyDown
         className={className}
         placeholder={placeholder}
         required={required}
         id={id}
         name={name}
         inputMode="numeric"
+        autoComplete="off"
       />
     </div>
   );

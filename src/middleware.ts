@@ -13,7 +13,7 @@ const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Obter token JWT da sessão
   const token = await getToken({
     req: request,
@@ -35,12 +35,10 @@ export async function middleware(request: NextRequest) {
   // 2. Proteger rotas específicas de fornecedor
   if (pathname.startsWith("/supplier")) {
     if (!isAuthenticated) {
-      // Usuário não autenticado - redirecionar para login com URL de retorno
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     } else if (userType !== "fornecedor") {
-      // Usuário autenticado mas não é fornecedor - redirecionar para dashboard apropriado
       const dashboardUrl = getDashboardUrl(userType);
       return NextResponse.redirect(new URL(dashboardUrl, request.url));
     }
@@ -49,12 +47,10 @@ export async function middleware(request: NextRequest) {
   // 3. Proteger rotas específicas de revendedor
   if (pathname.startsWith("/reseller")) {
     if (!isAuthenticated) {
-      // Usuário não autenticado - redirecionar para login com URL de retorno
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     } else if (userType !== "revendedor") {
-      // Usuário autenticado mas não é revendedor - redirecionar para dashboard apropriado
       const dashboardUrl = getDashboardUrl(userType);
       return NextResponse.redirect(new URL(dashboardUrl, request.url));
     }
@@ -63,7 +59,6 @@ export async function middleware(request: NextRequest) {
   // 4. Proteger rotas de perfil
   if (pathname.startsWith("/profile")) {
     if (!isAuthenticated) {
-      // Usuário não autenticado - redirecionar para login
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
@@ -77,8 +72,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Permitir a requisição continuar
-  return NextResponse.next();
+  // Criar a resposta
+  const response = NextResponse.next();
+
+  // Definir o Content Security Policy
+  const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' blob: data: images.unsplash.com via.placeholder.com;
+    font-src 'self';
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    block-all-mixed-content;
+    upgrade-insecure-requests;
+  `;
+
+  response.headers.set(
+    'Content-Security-Policy',
+    cspHeader.replace(/\s{2,}/g, ' ').trim()
+  );
+
+  return response;
 }
 
 // Função auxiliar para obter a URL do dashboard com base no tipo de usuário
