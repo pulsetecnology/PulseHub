@@ -151,7 +151,7 @@ export default function AddProductPage() {
 
     } catch (error) {
       console.error("Erro ao salvar produto:", error);
-      alert("Ocorreu um erro ao salvar o produto. Por favor, tente novamente.");
+      addToast("Ocorreu um erro ao salvar o produto. Por favor, tente novamente.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -212,7 +212,7 @@ export default function AddProductPage() {
       const remainingSlots = 10 - imageFiles.length;
       
       if (remainingSlots <= 0) {
-        alert("Você já atingiu o limite de 10 imagens.");
+        addToast("Você já atingiu o limite de 10 imagens.", "info");
         e.target.value = '';
         return;
       }
@@ -225,11 +225,11 @@ export default function AddProductPage() {
         const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
         
         if (!isValidType) {
-          alert(`O arquivo "${file.name}" não é um formato de imagem válido. Use JPG, PNG ou WEBP.`);
+          addToast(`O arquivo "${file.name}" não é um formato de imagem válido. Use JPG, PNG ou WEBP.`, "error");
         }
         
         if (!isValidSize) {
-          alert(`O arquivo "${file.name}" excede o tamanho máximo de 5MB.`);
+          addToast(`O arquivo "${file.name}" excede o tamanho máximo de 5MB.`, "error");
         }
         
         return isValidType && isValidSize;
@@ -257,6 +257,7 @@ export default function AddProductPage() {
       
       // Atualizar estados
       setImagePreviewUrls(prev => [...prev, ...validPreviews]);
+      setImageFiles(prev => [...prev, ...validFiles]);
       
       // Limpar input
       e.target.value = '';

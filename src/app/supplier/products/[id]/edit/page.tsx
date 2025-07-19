@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { DEFAULT_TARGET_AUDIENCES, DEFAULT_SIZES } from '@/types/product';
 import InputBRL from '@/components/forms/InputBRL';
 import { DbProduct } from '@/types/product';
+import { useToast } from '@/contexts/ToastContext';
 
 type ValidationErrors = {
   name?: string;
@@ -31,6 +32,7 @@ export default function EditProductPage() {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (!productId) return;
@@ -49,7 +51,7 @@ export default function EditProductPage() {
         setImagePreviewUrls(product.imageUrls ? product.imageUrls.split('[IMAGE]') : []);
       } catch (error) {
         console.error(error);
-        alert('Produto não encontrado');
+        addToast('Produto não encontrado', "error");
         router.push('/supplier/dashboard');
       }
     };
@@ -92,11 +94,11 @@ export default function EditProductPage() {
 
       if (!res.ok) throw new Error('Falha ao atualizar o produto');
 
-      alert('Produto atualizado com sucesso!');
+      addToast('Produto atualizado com sucesso!', "success");
       router.push('/supplier/dashboard');
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
-      alert('Ocorreu um erro ao salvar o produto.');
+      addToast('Ocorreu um erro ao salvar o produto.', "error");
     } finally {
       setIsLoading(false);
     }

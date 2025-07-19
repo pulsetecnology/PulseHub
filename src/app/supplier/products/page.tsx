@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useNextAuth } from '@/hooks/useNextAuth';
 import MainLayout from '@/layouts/MainLayout';
 import { FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiEdit, FiTrash2, FiStar } from 'react-icons/fi';
-import { DbProduct } from '@/lib/db'; // Importando de lib/db em vez de types/product
+import { DbProduct } from '@/types/product';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
+import { useToast } from '@/contexts/ToastContext';
 
 // Opções de filtro para categorias
 const categoryOptions = [
@@ -43,17 +44,13 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      // Simulação de busca de produtos da API
-      // Em um ambiente real, isso seria uma chamada à API
-      setTimeout(() => {
-        // Importar diretamente do módulo db
-        const { getAllProducts } = require('@/lib/db');
-        const fetchedProducts = getAllProducts();
-        setProducts(fetchedProducts);
-        setIsLoading(false);
-      }, 500);
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Falha ao buscar produtos');
+      const fetchedProducts = await res.json();
+      setProducts(fetchedProducts);
     } catch (error) {
       console.error(error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -89,26 +86,30 @@ export default function ProductsPage() {
   const handleDeleteProduct = async (productId: number) => {
     if (confirm("Tem certeza que deseja excluir este produto?")) {
       try {
-        // Simulação de exclusão de produto
-        const { deleteProduct } = require('@/lib/db');
-        deleteProduct(productId);
+        const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Falha ao excluir produto');
+        addToast("Produto excluído com sucesso!", "success");
         fetchProducts(); // Atualiza a lista
       } catch (error) {
         console.error(error);
-        alert('Ocorreu um erro ao excluir o produto.');
+        addToast('Ocorreu um erro ao excluir o produto.', "error");
       }
     }
   };
 
   const handleToggleFeatured = async (productId: number, currentFeatured: boolean) => {
     try {
-      // Simulação de atualização de produto
-      const { updateProduct } = require('@/lib/db');
-      updateProduct(productId, { featured: !currentFeatured });
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured: !currentFeatured }),
+      });
+      if (!res.ok) throw new Error('Falha ao atualizar destaque');
+      addToast(currentFeatured ? "Produto removido dos destaques!" : "Produto adicionado aos destaques!", "success");
       fetchProducts(); // Atualiza a lista
     } catch (error) {
       console.error(error);
-      alert('Ocorreu um erro ao atualizar o destaque do produto.');
+      addToast('Ocorreu um erro ao atualizar o destaque do produto.', "error");
     }
   };
 
@@ -274,7 +275,8 @@ export default function ProductsPage() {
                     <ProductCard
                       product={{
                         ...product,
-                        sizes: product.sizes || [],
+                        sizes: product.sizes ? product.sizes.split(',') : [],
+                        imageUrls: product.imageUrls ? product.imageUrls.split('[IMAGE]') : [],
                       }}
                       onDelete={() => handleDeleteProduct(product.id)}
                       isSupplier={true}
@@ -337,7 +339,7 @@ export default function ProductsPage() {
                               <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
                                 {product.imageUrls && product.imageUrls.length > 0 ? (
                                   <img
-                                    src={product.imageUrls[0]}
+                                    src={product.imageUrls.split('[IMAGE]')[0]}
                                     alt={product.name}
                                     className="h-10 w-10 object-cover"
                                   />
@@ -365,7 +367,7 @@ export default function ProductsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-wrap gap-1">
-                              {product.sizes?.map((size) => (
+                              {product.sizes?.split(',').map((size) => (
                                 <span
                                   key={size}
                                   className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"

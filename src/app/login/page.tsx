@@ -4,27 +4,29 @@ import { useState } from "react";
 import { useNextAuth } from "@/hooks/useNextAuth";
 import Link from "next/link";
 import PulseHubLogo from "@/components/ui/PulseHubLogo";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useNextAuth();
+  const { addToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     try {
       const result = await login(email, password);
       
       if (!result.success) {
-        setError(result.error || "Credenciais inválidas. Por favor, tente novamente.");
+        addToast(result.error || "Credenciais inválidas. Por favor, tente novamente.", "error");
+      } else {
+        addToast("Login realizado com sucesso!", "success");
       }
     } catch (err) {
-      setError("Ocorreu um erro durante o login. Por favor, tente novamente.");
+      addToast("Ocorreu um erro durante o login. Por favor, tente novamente.", "error");
       console.error(err);
     } finally {
       setIsLoading(false);

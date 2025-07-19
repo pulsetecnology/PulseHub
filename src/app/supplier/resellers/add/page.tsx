@@ -7,6 +7,7 @@ import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiMail } from "react-icons/fi";
 import { registerUser } from "@/app/api/auth/[...nextauth]/route";
 import Link from "next/link";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function AddReseller() {
   const router = useRouter();
@@ -18,9 +19,8 @@ export default function AddReseller() {
     confirmPassword: "",
     sendInvite: true,
   });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { addToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -32,17 +32,15 @@ export default function AddReseller() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
     
     // Validate form
     if (formData.password !== formData.confirmPassword) {
-      setError("As senhas não coincidem.");
+      addToast("As senhas não coincidem.", "error");
       return;
     }
     
     if (formData.password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.");
+      addToast("A senha deve ter pelo menos 6 caracteres.", "error");
       return;
     }
     
@@ -75,7 +73,7 @@ export default function AddReseller() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Show success message
-      setSuccess(`Revendedor ${formData.name} adicionado com sucesso! O revendedor já pode fazer login com as credenciais fornecidas.`);
+      addToast(`Revendedor ${formData.name} adicionado com sucesso! O revendedor já pode fazer login com as credenciais fornecidas.`, "success");
       
       // Reset form
       setFormData({
@@ -92,7 +90,7 @@ export default function AddReseller() {
       }
     } catch (err: any) {
       console.error("Error adding reseller:", err);
-      setError(err.message || "Ocorreu um erro ao adicionar o revendedor. Por favor, tente novamente.");
+      addToast(err.message || "Ocorreu um erro ao adicionar o revendedor. Por favor, tente novamente.", "error");
     } finally {
       setIsLoading(false);
     }

@@ -4,11 +4,13 @@ import RouteGuard from "@/components/auth/RouteGuard";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(session?.user?.name || "");
+  const { addToast } = useToast();
 
   // Função simulada para salvar o perfil
   const handleSaveProfile = () => {
@@ -16,7 +18,7 @@ export default function ProfilePage() {
     // Por enquanto, apenas simulamos o sucesso
     setTimeout(() => {
       setIsEditing(false);
-      alert("Perfil atualizado com sucesso!");
+      addToast("Perfil atualizado com sucesso!", "success");
     }, 500);
   };
 

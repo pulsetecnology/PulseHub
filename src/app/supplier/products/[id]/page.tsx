@@ -7,6 +7,7 @@ import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiEdit, FiTrash2, FiStar, FiTag, FiPackage, FiDollarSign, FiCalendar } from "react-icons/fi";
 import Link from "next/link";
 import { DbProduct } from "@/types/product";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function ProductDetailPage() {
         }
       } catch (error) {
         console.error("Erro ao buscar produto:", error);
-        alert("Produto não encontrado.");
+        addToast("Produto não encontrado.", "error");
         router.push("/supplier/products");
       }
     };
@@ -51,11 +52,11 @@ export default function ProductDetailPage() {
           method: 'DELETE',
         });
         if (!res.ok) throw new Error('Falha ao excluir produto');
-        alert("Produto excluído com sucesso!");
+        addToast("Produto excluído com sucesso!", "success");
         router.push("/supplier/products");
       } catch (error) {
         console.error(error);
-        alert('Ocorreu um erro ao excluir o produto.');
+        addToast('Ocorreu um erro ao excluir o produto.', "error");
       }
     }
   };
@@ -70,10 +71,10 @@ export default function ProductDetailPage() {
         });
         if (!res.ok) throw new Error('Falha ao atualizar destaque');
         setProduct(prev => prev ? { ...prev, featured: !prev.featured } : null);
-        alert(product.featured ? "Produto removido dos destaques!" : "Produto adicionado aos destaques!");
+        addToast(product.featured ? "Produto removido dos destaques!" : "Produto adicionado aos destaques!", "success");
       } catch (error) {
         console.error(error);
-        alert('Ocorreu um erro ao atualizar o destaque do produto.');
+        addToast('Ocorreu um erro ao atualizar o destaque do produto.', "error");
       }
     }
   };

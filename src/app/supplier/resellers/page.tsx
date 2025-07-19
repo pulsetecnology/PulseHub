@@ -7,6 +7,7 @@ import MainLayout from "@/layouts/MainLayout";
 import { FiPlus, FiSearch, FiEdit, FiTrash2, FiMail, FiCheck, FiX, FiPercent } from "react-icons/fi";
 import { users, getSupplierResellers, approveReseller } from "@/app/api/auth/[...nextauth]/route";
 import Link from "next/link";
+import { useToast } from "@/contexts/ToastContext";
 
 // Interface para o revendedor
 interface Revendedor {
@@ -26,6 +27,7 @@ export default function ResellerManagement() {
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [editingCommission, setEditingCommission] = useState<{id: string, value: number} | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const { addToast } = useToast();
 
   useEffect(() => {
     // Redireciona se não estiver autenticado ou não for fornecedor
@@ -68,6 +70,7 @@ export default function ResellerManagement() {
             : r
         )
       );
+      addToast("Revendedor aprovado com sucesso!", "success");
     }
   };
 
@@ -80,6 +83,7 @@ export default function ResellerManagement() {
           : r
       )
     );
+    addToast("Revendedor rejeitado com sucesso!", "info");
   };
 
   const handleUpdateCommission = (resellerId: string) => {
@@ -100,6 +104,7 @@ export default function ResellerManagement() {
       
       // Limpa o estado de edição
       setEditingCommission(null);
+      addToast("Comissão atualizada com sucesso!", "success");
     }
   };
 

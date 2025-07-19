@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
-import { FiEdit, FiTrash2, FiEye, FiPercent, FiTag } from 'react-icons/fi';
-import { DbProduct } from '@/lib/db'; // Importando de lib/db
+import { FiEdit, FiTrash2, FiEye, FiPercent, FiTag, FiShoppingCart } from 'react-icons/fi';
+import { DbProduct } from '@/types/product';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProductCardProps {
   product: DbProduct;
@@ -12,6 +13,13 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, onToggleFeatured, isSupplier = true }) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    addToCart(product, 1);
+    addToast(`${product.name} foi adicionado ao carrinho!`, "success");
+  };
+
   // Calcular o valor da comissão se disponível
   const commissionValue = product.commission 
     ? (product.price * (product.commission / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -115,12 +123,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, onToggleFe
       )}
       
       {!isSupplier && (
-        <div className="flex justify-end space-x-2 mt-4">
-          <Link href={`/reseller/products/${product.id}`}>
-            <button className="text-primary hover:text-primary-hover p-2 rounded-full hover:bg-primary/10 transition-colors">
-              <FiEye size={20} />
+        <div className="flex justify-between items-center mt-4">
+            <Link href={`/reseller/products/${product.id}`}>
+                <button className="text-primary hover:text-primary-hover p-2 rounded-full hover:bg-primary/10 transition-colors">
+                <FiEye size={20} />
+                </button>
+            </Link>
+            <button 
+                onClick={handleAddToCart}
+                className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors">
+                <FiShoppingCart className="mr-2" />
+                Adicionar
             </button>
-          </Link>
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import PulseHubLogo from "@/components/ui/PulseHubLogo";
 import { registerUser } from "@/app/api/auth/[...nextauth]/route";
 import { signIn } from "next-auth/react";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,8 +17,8 @@ export default function RegisterPage() {
     confirmPassword: "",
     userType: "revendedor", // Default to revendedor
   });
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { addToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -26,16 +27,15 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     
     // Validate form
     if (formData.password !== formData.confirmPassword) {
-      setError("As senhas não coincidem.");
+      addToast("As senhas não coincidem.", "error");
       return;
     }
     
     if (formData.password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.");
+      addToast("A senha deve ter pelo menos 6 caracteres.", "error");
       return;
     }
     
@@ -61,9 +61,10 @@ export default function RegisterPage() {
       });
       
       if (result?.error) {
-        setError("Erro ao fazer login automático. Por favor, faça login manualmente.");
+        addToast("Erro ao fazer login automático. Por favor, faça login manualmente.", "error");
         router.push("/login?registered=true");
       } else {
+        addToast("Cadastro e login realizados com sucesso!", "success");
         // Aguardar um momento para a sessão ser atualizada
         await new Promise(resolve => setTimeout(resolve, 500));
         
@@ -72,7 +73,7 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       console.error("Registration error:", err);
-      setError(err.message || "Ocorreu um erro durante o cadastro. Por favor, tente novamente.");
+      addToast(err.message || "Ocorreu um erro durante o cadastro. Por favor, tente novamente.", "error");
     } finally {
       setIsLoading(false);
     }
