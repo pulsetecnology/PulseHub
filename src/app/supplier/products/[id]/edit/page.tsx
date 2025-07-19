@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useNextAuth } from '@/hooks/useNextAuth';
 import MainLayout from '@/layouts/MainLayout';
-import { FiArrowLeft, FiUpload, FiX, FiAlertCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiUpload, FiX, FiAlertCircle, FiTrash2 } from 'react-icons/fi';
 import Link from 'next/link';
 import { DEFAULT_TARGET_AUDIENCES, DEFAULT_SIZES } from '@/types/product';
 import InputBRL from '@/components/forms/InputBRL';
@@ -33,6 +33,7 @@ export default function EditProductPage() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!productId) return;
@@ -101,6 +102,25 @@ export default function EditProductPage() {
       addToast('Ocorreu um erro ao salvar o produto.', "error");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    setIsLoading(true);
+    try {
+      // Simulate API call for deletion
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      // In a real app: const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+      // if (!res.ok) throw new Error('Falha ao excluir o produto');
+
+      addToast('Produto excluído com sucesso!', "success");
+      router.push('/supplier/products'); // Redirect to product list
+    } catch (error) {
+      console.error('Erro ao excluir produto:', error);
+      addToast('Ocorreu um erro ao excluir o produto.', "error");
+    } finally {
+      setIsLoading(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -198,6 +218,14 @@ export default function EditProductPage() {
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                <FiTrash2 className="inline-block mr-2" /> Excluir Produto
+              </button>
               <Link href="/supplier/dashboard" className="px-4 py-2 border rounded-md">Cancelar</Link>
               <button type="submit" disabled={isLoading} className="px-4 py-2 bg-primary text-white rounded-md disabled:opacity-50">
                 {isLoading ? 'Salvando...' : 'Salvar Alterações'}
@@ -206,6 +234,31 @@ export default function EditProductPage() {
           </form>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+            <FiAlertCircle className="text-red-500 text-5xl mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Confirmar Exclusão</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteProduct}
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

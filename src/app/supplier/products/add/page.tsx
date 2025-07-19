@@ -351,6 +351,7 @@ export default function AddProductPage() {
                       setFormData(prev => ({ ...prev, price: value }));
                       setTouched(prev => ({ ...prev, price: true }));
                     }}
+                    onBlur={() => handleBlur('price')}
                     className={`w-full px-4 py-2 border ${
                       errors.price && touched.price 
                         ? 'border-red-500 focus:ring-red-500' 

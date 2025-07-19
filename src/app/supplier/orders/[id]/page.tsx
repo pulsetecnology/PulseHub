@@ -8,34 +8,95 @@ import { FiArrowLeft, FiUser, FiMapPin, FiPhone, FiDollarSign, FiPackage } from 
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
 
-const mockOrder = {
-  id: "#1236",
-  reseller: {
-    name: "Ana Oliveira",
-    email: "ana.oliveira@example.com",
-    phone: "(11) 98765-4321",
-    address: "Rua das Flores, 456, São Paulo, SP"
-  },
-  date: "2024-07-16",
-  total: 2340.00,
-  status: "Pendente",
-  items: [
-    { id: 1, name: "Camiseta Básica", quantity: 20, price: 49.90, imageUrl: "https://via.placeholder.com/150?text=Camiseta" },
-    { id: 2, name: "Calça Jeans", quantity: 10, price: 129.90, imageUrl: "https://via.placeholder.com/150?text=Calça" },
-    { id: 5, name: "Camisa Social", quantity: 5, price: 89.90, imageUrl: "https://via.placeholder.com/150?text=Camisa" },
-  ]
-};
-
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [order, setOrder] = useState(mockOrder);
-  const [newStatus, setNewStatus] = useState(order.status);
+  const { addToast } = useToast();
+  const orderId = params.id as string;
+  const [order, setOrder] = useState<any>(null);
+  const [newStatus, setNewStatus] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
 
-  const handleUpdateStatus = () => {
-    // Lógica para atualizar o status do pedido (simulado)
-    setOrder(prev => ({ ...prev, status: newStatus }));
-    addToast(`Status do pedido atualizado para ${newStatus}!`, "success");
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        // In a real application, fetch order details from your API
+        // For now, we'll use a mock to simulate fetching
+        const fetchedOrder = {
+          id: orderId,
+          reseller: {
+            name: "Ana Oliveira",
+            email: "ana.oliveira@example.com",
+            phone: "(11) 98765-4321",
+            address: "Rua das Flores, 456, São Paulo, SP"
+          },
+          date: "2024-07-16",
+          total: 2340.00,
+          status: "Pendente",
+          items: [
+            { id: 1, name: "Camiseta Básica", quantity: 20, price: 49.90, imageUrl: "https://via.placeholder.com/150?text=Camiseta" },
+            { id: 2, name: "Calça Jeans", quantity: 10, price: 129.90, imageUrl: "https://via.placeholder.com/150?text=Calça" },
+            { id: 5, name: "Camisa Social", quantity: 5, price: 89.90, imageUrl: "https://via.placeholder.com/150?text=Camisa" },
+          ],
+          invoiceUrl: null, // Simulate no invoice initially
+        };
+        setOrder(fetchedOrder);
+        setNewStatus(fetchedOrder.status);
+      } catch (error) {
+        console.error("Error fetching order:", error);
+        addToast("Erro ao carregar detalhes do pedido.", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (orderId) {
+      fetchOrder();
+    }
+  }, [orderId, addToast]);
+
+  const handleUpdateStatus = async () => {
+    setIsUpdating(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Falha ao atualizar o status do pedido.");
+      }
+
+      setOrder((prev: any) => ({ ...prev, status: newStatus }));
+      addToast(`Status do pedido atualizado para ${newStatus}!`, "success");
+    } catch (error: any) {
+      console.error("Erro ao atualizar status:", error);
+      addToast(error.message || "Ocorreu um erro ao atualizar o status do pedido.", "error");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleGenerateInvoice = async () => {
+    setIsGeneratingInvoice(true);
+    try {
+      // In a real application, you would call an API to generate the invoice
+      // For now, we'll simulate a successful generation and provide a mock URL
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const mockInvoiceUrl = `https://example.com/invoice/${orderId}-${Date.now()}.pdf`;
+      setOrder((prev: any) => ({ ...prev, invoiceUrl: mockInvoiceUrl }));
+      addToast("Nota fiscal gerada com sucesso!", "success");
+    } catch (error) {
+      console.error("Erro ao gerar nota fiscal:", error);
+      addToast("Ocorreu um erro ao gerar a nota fiscal.", "error");
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -136,11 +197,35 @@ export default function OrderDetailPage() {
                 </select>
                 <button 
                     onClick={handleUpdateStatus}
-                    className="w-full mt-4 bg-primary text-white py-2 rounded-lg font-semibold hover:bg-primary-hover"
+                    disabled={isUpdating}
+                    className="w-full mt-4 bg-primary text-white py-2 rounded-lg font-semibold hover:bg-primary-hover disabled:opacity-50"
                 >
-                    Atualizar
+                    {isUpdating ? 'Atualizando...' : 'Atualizar'}
                 </button>
               </div>
+            </div>
+
+            {/* Geração de Nota Fiscal */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+              <h2 className="text-xl font-semibold mb-4">Nota Fiscal</h2>
+              {order.invoiceUrl ? (
+                <a 
+                  href={order.invoiceUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center"
+                >
+                  <FiDownload className="mr-2" /> Baixar Nota Fiscal
+                </a>
+              ) : (
+                <button 
+                  onClick={handleGenerateInvoice}
+                  disabled={isGeneratingInvoice}
+                  className="w-full bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 disabled:opacity-50"
+                >
+                  {isGeneratingInvoice ? 'Gerando...' : 'Gerar Nota Fiscal'}
+                </button>
+              )}
             </div>
           </div>
         </div>

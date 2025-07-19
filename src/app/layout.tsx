@@ -6,6 +6,7 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NextAuthProvider } from "@/contexts/NextAuthProvider";
 import { CartProvider } from "@/contexts/CartContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -16,6 +17,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "PulseHub - Sistema de Representantes e Fornecedores",
   description: "Plataforma para revendedores e fornecedores de moda",
+  viewport: "width=device-width, initial-scale=1.0",
 };
 
 export default function RootLayout({
@@ -30,7 +32,9 @@ export default function RootLayout({
           <ThemeProvider>
             <CartProvider>
               <ToastProvider>
-                <AuthProvider>{children}</AuthProvider>
+                <LoadingProvider>
+                  <AuthProvider>{children}</AuthProvider>
+                </LoadingProvider>
               </ToastProvider>
             </CartProvider>
           </ThemeProvider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNextAuth } from '@/hooks/useNextAuth';
 import Link from 'next/link';
@@ -8,6 +8,10 @@ import { useRouter } from 'next/navigation';
 import { FiHome, FiBox, FiUsers, FiLogOut, FiMenu, FiX, FiShoppingBag, FiFilter, FiTag } from 'react-icons/fi';
 import ThemeToggle from '@/components/ThemeToggle';
 import PulseHubLogo from '@/components/ui/PulseHubLogo';
+import { useLoading } from '@/contexts/LoadingContext';
+import { signOut } from "next-auth/react";
+
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutos em milissegundos
 
 const supplierLinks = [
   { href: '/supplier/dashboard', label: 'Dashboard', icon: FiHome },
@@ -36,7 +40,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-2xl transition-all duration-300 border-r border-white/20 dark:border-gray-700/20">
+    <div className="h-full flex flex-col bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-2xl transition-all duration-300 border-r border-white/20 dark:border-gray-700/20 md:w-64 w-full">
       {/* Logo Section */}
       <div className="p-6 border-b border-gray-100 dark:border-gray-700/50">
         <div className="flex flex-col items-center">
@@ -48,7 +52,7 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-2" role="navigation">
         {links.map(link => (
           <Link
             key={link.href}
@@ -106,6 +110,31 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useNextAuth();
   const router = useRouter();
+  const { isLoading } = useLoading();
+
+  const resetInactivityTimer = useCallback(() => {
+    clearTimeout(window.__inactivityTimer);
+    window.__inactivityTimer = setTimeout(() => {
+      signOut({ redirect: true, callbackUrl: '/login?sessionExpired=true' });
+    }, INACTIVITY_TIMEOUT);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      resetInactivityTimer();
+
+      window.addEventListener('mousemove', resetInactivityTimer);
+      window.addEventListener('keydown', resetInactivityTimer);
+      window.addEventListener('click', resetInactivityTimer);
+
+      return () => {
+        clearTimeout(window.__inactivityTimer);
+        window.removeEventListener('mousemove', resetInactivityTimer);
+        window.removeEventListener('keydown', resetInactivityTimer);
+        window.removeEventListener('click', resetInactivityTimer);
+      };
+    }
+  }, [user, resetInactivityTimer]);
 
   if (!user) {
     return (
@@ -141,7 +170,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       {/* Mobile Sidebar & Overlay */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
-          <aside className="w-64 relative z-10">
+          <aside className="w-64 relative z-10 transform transition-transform duration-300 ease-in-out -translate-x-full data-[open=true]:translate-x-0" data-open={isMobileMenuOpen}>
             <Sidebar />
           </aside>
           <div
@@ -152,7 +181,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col relative z-10">
+      <main className="flex-1 flex flex-col relative z-10 overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-lg border-b border-white/20 dark:border-gray-700/20">
           <div className="flex items-center">
@@ -163,16 +192,28 @@ export default function MainLayout({ children }: { children: ReactNode }) {
             <button
               onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              aria-controls="mobile-sidebar"
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
           </div>
         </header>
 
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto">
           {children}
         </div>
       </main>
+
+      {/* Global Loading Indicator */}
+      {isLoading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="flex flex-col items-center text-white">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+            <p className="mt-4 text-lg">Carregando...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

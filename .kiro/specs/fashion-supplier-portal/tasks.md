@@ -33,7 +33,7 @@
     
   - [x] 2.2 Configurar NextAuth.js
 
-u
+
 
     - Instalar e configurar NextAuth.js
     - Implementar provedores de autenticação (credentials)
@@ -123,13 +123,13 @@ u
     - Integrar página de sucesso após cadastro (ProductSuccessPage)
     - _Requirements: 2.2, 2.3, 2.6_
 
-  - [ ] 3.4 Implementar edição de produto
+  - [x] 3.4 Implementar edição de produto
     - Criar formulário de edição pré-preenchido
     - Permitir atualização de imagens
     - Implementar gerenciamento de variações
     - _Requirements: 2.4, 2.6_
 
-  - [ ] 3.5 Implementar destaque de produtos
+  - [x] 3.5 Implementar destaque de produtos
     - Adicionar opção para marcar produto como destaque
     - Implementar visualização de produtos destacados
     - _Requirements: 2.7_
@@ -186,7 +186,7 @@ u
     - _Requirements: 4.4, 4.5_
 
 - [ ] 6. Orçamentos e pedidos
-  - [ ] 6.1 Implementar carrinho de compras
+  - [x] 6.1 Implementar carrinho de compras
     - Criar componente de carrinho persistente
     - Implementar adição/remoção de produtos
     - Calcular totais e exibir resumo
