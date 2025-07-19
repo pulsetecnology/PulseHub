@@ -33,7 +33,7 @@
     
   - [x] 2.2 Configurar NextAuth.js
 
-
+u
 
     - Instalar e configurar NextAuth.js
     - Implementar provedores de autenticação (credentials)

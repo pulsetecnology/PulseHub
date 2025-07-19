@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useNextAuth } from '@/hooks/useNextAuth';
 import MainLayout from '@/layouts/MainLayout';
 import { FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiEdit, FiTrash2, FiStar } from 'react-icons/fi';
-import { DbProduct } from '@/types/product'; // Usar DbProduct
+import { DbProduct } from '@/lib/db'; // Importando de lib/db em vez de types/product
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 
@@ -21,7 +21,7 @@ export default function ProductsPage() {
   const router = useRouter();
   const { user } = useNextAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState<DbProduct[]>([]); // Usar DbProduct
+  const [products, setProducts] = useState<DbProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -43,13 +43,17 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/products');
-      if (!res.ok) throw new Error('Falha ao buscar produtos');
-      const data: DbProduct[] = await res.json();
-      setProducts(data);
+      // Simulação de busca de produtos da API
+      // Em um ambiente real, isso seria uma chamada à API
+      setTimeout(() => {
+        // Importar diretamente do módulo db
+        const { getAllProducts } = require('@/lib/db');
+        const fetchedProducts = getAllProducts();
+        setProducts(fetchedProducts);
+        setIsLoading(false);
+      }, 500);
     } catch (error) {
       console.error(error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -85,10 +89,9 @@ export default function ProductsPage() {
   const handleDeleteProduct = async (productId: number) => {
     if (confirm("Tem certeza que deseja excluir este produto?")) {
       try {
-        const res = await fetch(`/api/products/${productId}`, {
-          method: 'DELETE',
-        });
-        if (!res.ok) throw new Error('Falha ao excluir produto');
+        // Simulação de exclusão de produto
+        const { deleteProduct } = require('@/lib/db');
+        deleteProduct(productId);
         fetchProducts(); // Atualiza a lista
       } catch (error) {
         console.error(error);
@@ -99,12 +102,9 @@ export default function ProductsPage() {
 
   const handleToggleFeatured = async (productId: number, currentFeatured: boolean) => {
     try {
-      const res = await fetch(`/api/products/${productId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured: !currentFeatured }),
-      });
-      if (!res.ok) throw new Error('Falha ao atualizar destaque');
+      // Simulação de atualização de produto
+      const { updateProduct } = require('@/lib/db');
+      updateProduct(productId, { featured: !currentFeatured });
       fetchProducts(); // Atualiza a lista
     } catch (error) {
       console.error(error);
@@ -249,144 +249,169 @@ export default function ProductsPage() {
         </div>
 
         {/* Visualização em Grade */}
-        {isLoading ? (
-          <p>Carregando produtos...</p>
-        ) : filteredProducts.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
-            <div className="text-gray-500 dark:text-gray-400 mb-4">
-              Nenhum produto encontrado.
-            </div>
-            <button
-              onClick={handleAddProduct}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
-            >
-              Adicionar Produto
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {currentProducts.map(product => (
-              <div key={product.id} className="relative">
-                <ProductCard
-                  product={{
-                    ...product,
-                    imageUrls: product.imageUrls.split('[IMAGE]'), // Dividir as URLs
-                    sizes: product.sizes ? product.sizes.split(',') : [],
-                  }}
-                  onDelete={() => handleDeleteProduct(product.id)}
-                  isSupplier={true}
-                  onToggleFeatured={() => handleToggleFeatured(product.id, product.featured)}
-                />
+        {viewMode === "grid" && (
+          <>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
               </div>
-            ))}
-          </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+                <div className="text-gray-500 dark:text-gray-400 mb-4">
+                  Nenhum produto encontrado.
+                </div>
+                <button
+                  onClick={handleAddProduct}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
+                >
+                  Adicionar Produto
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {currentProducts.map(product => (
+                  <div key={product.id} className="relative">
+                    <ProductCard
+                      product={{
+                        ...product,
+                        sizes: product.sizes || [],
+                      }}
+                      onDelete={() => handleDeleteProduct(product.id)}
+                      isSupplier={true}
+                      onToggleFeatured={() => handleToggleFeatured(product.id, product.featured)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* Visualização em Tabela */}
-        {viewMode === "table" && filteredProducts.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Produto
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Preço
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Tamanhos
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Destaque
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {currentProducts.map((product) => (
-                    <tr key={product.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
-                            {product.imageUrls && product.imageUrls.split('[IMAGE]').length > 0 ? (
-                              <img
-                                src={product.imageUrls.split('[IMAGE]')[0]}
-                                alt={product.name}
-                                className="h-10 w-10 object-cover"
-                              />
-                            ) : (
-                              <div className="h-10 w-10 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                N/A
+        {viewMode === "table" && (
+          <>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+                <div className="text-gray-500 dark:text-gray-400 mb-4">
+                  Nenhum produto encontrado.
+                </div>
+                <button
+                  onClick={handleAddProduct}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
+                >
+                  Adicionar Produto
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Produto
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Preço
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Tamanhos
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Destaque
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Ações
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {currentProducts.map((product) => (
+                        <tr key={product.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
+                                {product.imageUrls && product.imageUrls.length > 0 ? (
+                                  <img
+                                    src={product.imageUrls[0]}
+                                    alt={product.name}
+                                    className="h-10 w-10 object-cover"
+                                  />
+                                ) : (
+                                  <div className="h-10 w-10 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                                    N/A
+                                  </div>
+                                )}
                               </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {product.name}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {product.description?.substring(0, 50)}
+                                  {product.description && product.description.length > 50 ? "..." : ""}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-wrap gap-1">
+                              {product.sizes?.map((size) => (
+                                <span
+                                  key={size}
+                                  className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"
+                                >
+                                  {size}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {product.featured ? (
+                              <span className="bg-yellow-400 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
+                                Destaque
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleToggleFeatured(product.id, product.featured)}
+                                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                Marcar destaque
+                              </button>
                             )}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {product.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end space-x-2">
+                              <Link href={`/supplier/products/${product.id}/edit`}>
+                                <button className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                  <FiEdit size={18} />
+                                </button>
+                              </Link>
+                              <button
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                              >
+                                <FiTrash2 size={18} />
+                              </button>
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {product.description?.substring(0, 50)}
-                              {product.description && product.description.length > 50 ? "..." : ""}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
-                          {product.sizes?.split(',').map((size) => (
-                            <span
-                              key={size}
-                              className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"
-                            >
-                              {size}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {product.featured ? (
-                          <span className="bg-yellow-400 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
-                            Destaque
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleToggleFeatured(product.id, product.featured)}
-                            className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            Marcar destaque
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
-                          <Link href={`/supplier/products/${product.id}/edit`}>
-                            <button className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                              <FiEdit size={18} />
-                            </button>
-                          </Link>
-                          <button
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                          >
-                            <FiTrash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Paginação */}

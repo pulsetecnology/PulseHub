@@ -24,6 +24,9 @@ export default function ProductDetailPage() {
         const res = await fetch(`/api/products/${productId}`);
         if (!res.ok) throw new Error("Produto não encontrado");
         const fetchedProduct: DbProduct = await res.json();
+        // Converter strings de data para objetos Date
+        fetchedProduct.createdAt = new Date(fetchedProduct.createdAt);
+        fetchedProduct.updatedAt = new Date(fetchedProduct.updatedAt);
         setProduct(fetchedProduct);
         if (fetchedProduct.imageUrls) {
           const images = fetchedProduct.imageUrls.split('[IMAGE]');
