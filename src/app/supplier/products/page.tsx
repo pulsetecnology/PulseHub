@@ -334,28 +334,30 @@ export default function ProductsPage() {
                         <tr key={product.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
-                                {product.imageUrls && product.imageUrls.length > 0 ? (
-                                  <img
-                                    src={product.imageUrls[0]}
-                                    alt={product.name}
-                                    className="h-10 w-10 object-cover"
-                                  />
-                                ) : (
-                                  <div className="h-10 w-10 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                    N/A
+                              <Link href={`/supplier/products/${product.id}/edit`} className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
+                                  {product.imageUrls && product.imageUrls.length > 0 ? (
+                                    <img
+                                      src={product.imageUrls[0]}
+                                      alt={product.name}
+                                      className="h-10 w-10 object-cover"
+                                    />
+                                  ) : (
+                                    <div className="h-10 w-10 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                                      N/A
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {product.name}
                                   </div>
-                                )}
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {product.name}
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {product.description?.substring(0, 50)}
+                                    {product.description && product.description.length > 50 ? "..." : ""}
+                                  </div>
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {product.description?.substring(0, 50)}
-                                  {product.description && product.description.length > 50 ? "..." : ""}
-                                </div>
-                              </div>
+                              </Link>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

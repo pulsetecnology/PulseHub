@@ -58,15 +58,15 @@ export default function ResellerProductsPage() {
       fetchProducts();
     }
   }, [user, router, supplierId]);
-  
+
   const fetchSuppliers = async () => {
     try {
       // Buscar fornecedores aprovados para este revendedor
       const response = await fetch(`/api/supplier-reseller-relations?resellerId=${user?.id}&status=approved`);
       if (!response.ok) throw new Error('Falha ao buscar fornecedores');
-      
+
       const relations = await response.json();
-      
+
       // Transformar os dados para o formato esperado
       const suppliersList = relations.map((relation: any) => ({
         id: relation.supplier.id,
@@ -74,7 +74,7 @@ export default function ResellerProductsPage() {
         email: relation.supplier.email,
         commission: relation.commission
       }));
-      
+
       setSuppliers(suppliersList);
     } catch (error) {
       console.error(error);
@@ -86,19 +86,19 @@ export default function ResellerProductsPage() {
     setIsLoading(true);
     try {
       // Buscar produtos do fornecedor específico ou de todos os fornecedores aprovados
-      const url = supplierId 
-        ? `/api/products?supplierId=${supplierId}&resellerView=true` 
+      const url = supplierId
+        ? `/api/products?supplierId=${supplierId}&resellerView=true`
         : `/api/products?resellerView=true&resellerId=${user?.id}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) throw new Error('Falha ao buscar produtos');
-      
+
       const data = await response.json();
-      
+
       // Extrair categorias únicas
       const uniqueCategories = [...new Set(data.map((product: Product) => product.category))];
       setCategories(uniqueCategories);
-      
+
       setProducts(data);
     } catch (error) {
       console.error(error);
@@ -110,34 +110,34 @@ export default function ResellerProductsPage() {
 
   // Filtrar produtos com base no termo de busca, categoria e fornecedor
   const filteredProducts = products.filter(product => {
-    const matchesSearch = 
+    const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
     const matchesSupplier = supplierFilter === "all" || product.supplierId === supplierFilter;
-    
+
     return matchesSearch && matchesCategory && matchesSupplier;
   });
-  
+
   // Agrupar produtos por fornecedor se necessário
   type GroupedProductEntry = [string, { supplierName: string; products: Product[] }];
 
-  const groupedProducts: GroupedProductEntry[] = groupBySupplier 
+  const groupedProducts: GroupedProductEntry[] = groupBySupplier
     ? Object.entries(
-        filteredProducts.reduce((acc, product) => {
-          const supplierId = product.supplierId || 'unknown';
-          if (!acc[supplierId]) {
-            acc[supplierId] = {
-              supplierName: product.supplierName || 'Fornecedor Desconhecido',
-              products: []
-            };
-          }
-          acc[supplierId].products.push(product);
-          return acc;
-        }, {} as Record<string, { supplierName: string; products: Product[] }>)
-      )
+      filteredProducts.reduce((acc, product) => {
+        const supplierId = product.supplierId || 'unknown';
+        if (!acc[supplierId]) {
+          acc[supplierId] = {
+            supplierName: product.supplierName || 'Fornecedor Desconhecido',
+            products: []
+          };
+        }
+        acc[supplierId].products.push(product);
+        return acc;
+      }, {} as Record<string, { supplierName: string; products: Product[] }>)
+    )
     : [['all', { supplierName: 'Todos os Produtos', products: filteredProducts }]];
 
   // Formatar preço
@@ -161,30 +161,28 @@ export default function ResellerProductsPage() {
               {supplierId ? "Produtos do Fornecedor" : "Todos os Produtos"}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              {supplierId 
-                ? "Produtos disponíveis para revenda deste fornecedor" 
+              {supplierId
+                ? "Produtos disponíveis para revenda deste fornecedor"
                 : "Produtos disponíveis para revenda de todos os seus fornecedores"}
             </p>
           </div>
           <div className="flex space-x-2">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-md ${
-                viewMode === "grid"
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-              }`}
+              className={`p-2 rounded-md ${viewMode === "grid"
+                ? "bg-primary text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                }`}
               title="Visualização em grade"
             >
               <FiGrid size={20} />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-md ${
-                viewMode === "list"
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-              }`}
+              className={`p-2 rounded-md ${viewMode === "list"
+                ? "bg-primary text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                }`}
               title="Visualização em lista"
             >
               <FiList size={20} />
@@ -208,7 +206,7 @@ export default function ResellerProductsPage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className="flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
               >
@@ -216,7 +214,7 @@ export default function ResellerProductsPage() {
                 Filtros
                 <FiChevronDown className="ml-2" />
               </button>
-              
+
               {isFilterOpen && (
                 <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10 border border-gray-200 dark:border-gray-700">
                   <div className="p-4">
@@ -226,7 +224,7 @@ export default function ResellerProductsPage() {
                         <FiX size={18} />
                       </button>
                     </div>
-                    
+
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Fornecedor
@@ -244,7 +242,7 @@ export default function ResellerProductsPage() {
                         ))}
                       </select>
                     </div>
-                    
+
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Categoria
@@ -262,7 +260,7 @@ export default function ResellerProductsPage() {
                         ))}
                       </select>
                     </div>
-                    
+
                     <div className="mb-4">
                       <label className="flex items-center">
                         <input
@@ -276,7 +274,7 @@ export default function ResellerProductsPage() {
                         </span>
                       </label>
                     </div>
-                    
+
                     <button
                       onClick={() => {
                         setSupplierFilter("all");
@@ -294,20 +292,19 @@ export default function ResellerProductsPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Informações sobre fornecedores */}
         {suppliers.length > 0 && (
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
             <h2 className="text-lg font-medium text-blue-800 dark:text-blue-300 mb-2">Seus Fornecedores</h2>
             <div className="flex flex-wrap gap-2">
               {suppliers.map(supplier => (
-                <div 
+                <div
                   key={supplier.id}
-                  className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors ${
-                    supplierFilter === supplier.id 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors ${supplierFilter === supplier.id
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30'
+                    }`}
                   onClick={() => setSupplierFilter(supplierFilter === supplier.id ? "all" : supplier.id)}
                 >
                   {supplier.name} {supplier.commission ? `(${supplier.commission}%)` : ''}
@@ -328,8 +325,8 @@ export default function ResellerProductsPage() {
               {searchTerm || categoryFilter !== "all"
                 ? "Nenhum produto encontrado com os filtros atuais."
                 : supplierId
-                ? "Este fornecedor ainda não tem produtos disponíveis."
-                : "Você ainda não tem produtos disponíveis para revenda."}
+                  ? "Este fornecedor ainda não tem produtos disponíveis."
+                  : "Você ainda não tem produtos disponíveis para revenda."}
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {!searchTerm && categoryFilter === "all" && (
@@ -434,23 +431,25 @@ export default function ResellerProductsPage() {
                     <tr key={product.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
-                            <ImageFallback
-                              src={product.imageUrls[0] || "https://via.placeholder.com/100x100?text=" + encodeURIComponent(product.name)}
-                              alt={product.name}
-                              width={40}
-                              height={40}
-                              className="w-10 h-10"
-                            />
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {product.name}
+                          <Link href={`/reseller/products/${product.id}`} className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
+                              <ImageFallback
+                                src={product.imageUrls[0] || "https://via.placeholder.com/100x100?text=" + encodeURIComponent(product.name)}
+                                alt={product.name}
+                                width={40}
+                                height={40}
+                                className="w-10 h-10"
+                              />
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-                              {product.description || "Sem descrição"}
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                {product.name}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                                {product.description || "Sem descrição"}
+                              </div>
                             </div>
-                          </div>
+                          </Link>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

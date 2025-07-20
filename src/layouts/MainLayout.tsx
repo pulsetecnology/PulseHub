@@ -48,9 +48,6 @@ const Sidebar = () => {
       <div className="p-6 border-b border-gray-100 dark:border-gray-700/50">
         <div className="flex flex-col items-center">
           <PulseHubLogo size="md" />
-          <p className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-2 text-center">
-            {userType}
-          </p>
         </div>
       </div>
 
@@ -85,8 +82,8 @@ const Sidebar = () => {
               <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
                 {user?.name || "Usuário"}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                Ver perfil
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate capitalize">
+                {userType} • Ver perfil
               </p>
             </div>
           </Link>
@@ -99,7 +96,7 @@ const Sidebar = () => {
               aria-label="Logout"
               title="Sair"
             >
-              <FiLogOut size={18} />
+              <FiLogOut size={18} className="transform rotate-180" />
             </button>
             <ThemeToggle />
           </div>
