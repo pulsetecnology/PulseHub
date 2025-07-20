@@ -223,7 +223,7 @@ export default function EditProductPage() {
             {/* Informações básicas */}
             <div>
               <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Informações Básicas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nome do produto*
@@ -271,6 +271,25 @@ export default function EditProductPage() {
                       <FiAlertCircle className="mr-1" /> {errors.price}
                     </p>
                   )}
+                </div>
+                <div>
+                  <label htmlFor="commission" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Comissão do Produto (%)*
+                  </label>
+                  <input
+                    id="commission"
+                    name="commission"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.commission || 10}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Comissão padrão para este produto. Pode ser sobrescrita pela comissão do revendedor.
+                  </p>
                 </div>
               </div>
               <div className="mt-4">

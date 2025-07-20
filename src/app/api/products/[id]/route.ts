@@ -49,6 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (body.targetAudiences) updateData.targetAudiences = body.targetAudiences;
     if (body.supplierId) updateData.supplierId = body.supplierId;
     if (body.supplierName) updateData.supplierName = body.supplierName;
+    if (body.commission !== undefined) updateData.commission = parseFloat(body.commission);
     
     // Tratar imageUrls apenas se estiver presente
     if (body.imageUrls !== undefined) {

@@ -96,7 +96,7 @@ export default function ResellerProductsPage() {
       const data = await response.json();
 
       // Extrair categorias únicas
-      const uniqueCategories = [...new Set(data.map((product: Product) => product.category))];
+      const uniqueCategories = [...new Set(data.map((product: Product) => product.category))].filter(Boolean) as string[];
       setCategories(uniqueCategories);
 
       setProducts(data);
@@ -339,24 +339,100 @@ export default function ResellerProductsPage() {
             </p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+          groupBySupplier ? (
+            <div className="space-y-8">
+              {groupedProducts.map(([supplierId, group]) => (
+                <div key={supplierId} className="space-y-4">
+                  <div className="flex items-center">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">{group.supplierName}</h2>
+                    <div className="ml-3 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded-full">
+                      {group.products.length} produtos
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {group.products.map((product) => (
+                      <div
+                        key={product.id}
+                        className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                      >
+                        <Link href={`/reseller/products/${product.id}`}>
+                          <div className="relative h-48">
+                            <ImageFallback
+                              src={product.imageUrls[0] || "https://via.placeholder.com/500x500?text=" + encodeURIComponent(product.name)}
+                              alt={product.name}
+                              className="w-full h-full"
+                            />
+                            {product.featured && (
+                              <div className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded-md">
+                                Destaque
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                        <div className="p-4">
+                          <div className="flex justify-between items-start">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {product.name}
+                            </h3>
+                            <span className="text-primary font-bold">
+                              {formatPrice(product.price)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                            {product.description || "Sem descrição"}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-1">
+                            {product.sizes.slice(0, 5).map((size) => (
+                              <span
+                                key={size}
+                                className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md"
+                              >
+                                {size}
+                              </span>
+                            ))}
+                            {product.sizes.length > 5 && (
+                              <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md">
+                                +{product.sizes.length - 5}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-4">
+                            <Link
+                              href={`/reseller/products/${product.id}`}
+                              className="w-full flex items-center justify-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
+                            >
+                              <FiShoppingBag className="mr-2" />
+                              Ver detalhes
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => (
               <div
                 key={product.id}
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="relative h-48">
-                  <ImageFallback
-                    src={product.imageUrls[0] || "https://via.placeholder.com/500x500?text=" + encodeURIComponent(product.name)}
-                    alt={product.name}
-                    className="w-full h-full"
-                  />
-                  {product.featured && (
-                    <div className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded-md">
-                      Destaque
-                    </div>
-                  )}
-                </div>
+                <Link href={`/reseller/products/${product.id}`}>
+                  <div className="relative h-48">
+                    <ImageFallback
+                      src={product.imageUrls[0] || "https://via.placeholder.com/500x500?text=" + encodeURIComponent(product.name)}
+                      alt={product.name}
+                      className="w-full h-full"
+                    />
+                    {product.featured && (
+                      <div className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded-md">
+                        Destaque
+                      </div>
+                    )}
+                  </div>
+                </Link>
                 <div className="p-4">
                   <div className="flex justify-between items-start">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
