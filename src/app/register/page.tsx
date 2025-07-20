@@ -42,16 +42,25 @@ export default function RegisterPage() {
     setIsLoading(true);
     
     try {
-      // Register the user using the registerUser function
-      const newUser = registerUser(
-        formData.name,
-        formData.email,
-        formData.password,
-        formData.userType as "fornecedor" | "revendedor"
-      );
+      // Register the user via API
+      const userResponse = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          type: formData.userType
+        })
+      });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!userResponse.ok) {
+        const errorData = await userResponse.json();
+        throw new Error(errorData.error || 'Falha ao criar usuário');
+      }
+      
+      const newUser = await userResponse.json();
+      console.log('Usuário criado com sucesso:', newUser.id);
       
       // Auto-login after registration
       const result = await signIn("credentials", {
@@ -61,7 +70,7 @@ export default function RegisterPage() {
       });
       
       if (result?.error) {
-        addToast("Erro ao fazer login automático. Por favor, faça login manualmente.", "error");
+        addToast("Usuário criado com sucesso! Por favor, faça login.", "success");
         router.push("/login?registered=true");
       } else {
         addToast("Cadastro e login realizados com sucesso!", "success");

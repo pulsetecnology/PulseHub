@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNextAuth } from '@/hooks/useNextAuth';
 import MainLayout from '@/layouts/MainLayout';
-import { FiPlus, FiSearch, FiEdit, FiTrash2, FiTag, FiAlertCircle } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiEdit, FiTrash2, FiTag, FiAlertCircle, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import { useToast } from '@/contexts/ToastContext';
+import { SIZE_TYPES, getSizeTypeById, SizeOption } from '@/types/sizes';
 
 interface Category {
   id: number;
@@ -36,6 +37,8 @@ export default function CategoriesPage() {
     name: '',
     description: '',
     slug: '',
+    sizeType: '',
+    customSizes: [] as SizeOption[],
   });
   const [formErrors, setFormErrors] = useState({
     name: '',
@@ -72,6 +75,8 @@ export default function CategoriesPage() {
       name: '',
       description: '',
       slug: '',
+      sizeType: '',
+      customSizes: [],
     });
     setFormErrors({
       name: '',
@@ -80,12 +85,14 @@ export default function CategoriesPage() {
     setShowAddModal(true);
   };
 
-  const handleEditCategory = (category: Category) => {
+  const handleEditCategory = (category: any) => {
     setCurrentCategory(category);
     setFormData({
       name: category.name,
       description: category.description || '',
       slug: category.slug,
+      sizeType: category.sizeType || '',
+      customSizes: category.customSizes ? JSON.parse(category.customSizes) : [],
     });
     setFormErrors({
       name: '',
@@ -148,6 +155,7 @@ export default function CategoriesPage() {
         body: JSON.stringify({
           ...formData,
           supplierId: user?.id,
+          customSizes: formData.sizeType === 'custom' ? formData.customSizes : null,
         }),
       });
 
@@ -173,7 +181,10 @@ export default function CategoriesPage() {
       const res = await fetch(`/api/categories/${currentCategory.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          customSizes: formData.sizeType === 'custom' ? formData.customSizes : null,
+        }),
       });
 
       if (!res.ok) {
@@ -414,6 +425,80 @@ export default function CategoriesPage() {
                     </p>
                   </div>
                   <div>
+                    <label htmlFor="sizeType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Tipo de Tamanho*
+                    </label>
+                    <select
+                      id="sizeType"
+                      name="sizeType"
+                      value={formData.sizeType}
+                      onChange={(e) => setFormData(prev => ({ ...prev, sizeType: e.target.value, customSizes: [] }))}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      required
+                    >
+                      <option value="">Selecione um tipo de tamanho</option>
+                      {SIZE_TYPES.map(type => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                    {formData.sizeType && (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {getSizeTypeById(formData.sizeType)?.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Campo para tamanhos personalizados */}
+                  {formData.sizeType === 'custom' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Tamanhos Personalizados*
+                      </label>
+                      <div className="space-y-2">
+                        {formData.customSizes.map((size, index) => (
+                          <div key={index} className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Rótulo (ex: PP)"
+                              value={size.label}
+                              onChange={(e) => {
+                                const newSizes = [...formData.customSizes];
+                                newSizes[index] = { ...size, label: e.target.value, value: e.target.value.toLowerCase() };
+                                setFormData(prev => ({ ...prev, customSizes: newSizes }));
+                              }}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSizes = formData.customSizes.filter((_, i) => i !== index);
+                                setFormData(prev => ({ ...prev, customSizes: newSizes }));
+                              }}
+                              className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                            >
+                              <FiX size={16} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              customSizes: [...prev.customSizes, { label: '', value: '' }]
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-gray-500 hover:border-primary hover:text-primary"
+                        >
+                          + Adicionar Tamanho
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Descrição
                     </label>
@@ -497,6 +582,80 @@ export default function CategoriesPage() {
                       </p>
                     )}
                   </div>
+                  <div>
+                    <label htmlFor="edit-sizeType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Tipo de Tamanho*
+                    </label>
+                    <select
+                      id="edit-sizeType"
+                      name="sizeType"
+                      value={formData.sizeType}
+                      onChange={(e) => setFormData(prev => ({ ...prev, sizeType: e.target.value, customSizes: e.target.value === 'custom' ? prev.customSizes : [] }))}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      required
+                    >
+                      <option value="">Selecione um tipo de tamanho</option>
+                      {SIZE_TYPES.map(type => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                    {formData.sizeType && (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {getSizeTypeById(formData.sizeType)?.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Campo para tamanhos personalizados na edição */}
+                  {formData.sizeType === 'custom' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Tamanhos Personalizados*
+                      </label>
+                      <div className="space-y-2">
+                        {formData.customSizes.map((size, index) => (
+                          <div key={index} className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Rótulo (ex: PP)"
+                              value={size.label}
+                              onChange={(e) => {
+                                const newSizes = [...formData.customSizes];
+                                newSizes[index] = { ...size, label: e.target.value, value: e.target.value.toLowerCase() };
+                                setFormData(prev => ({ ...prev, customSizes: newSizes }));
+                              }}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSizes = formData.customSizes.filter((_, i) => i !== index);
+                                setFormData(prev => ({ ...prev, customSizes: newSizes }));
+                              }}
+                              className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                            >
+                              <FiX size={16} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              customSizes: [...prev.customSizes, { label: '', value: '' }]
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-gray-500 hover:border-primary hover:text-primary"
+                        >
+                          + Adicionar Tamanho
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Descrição

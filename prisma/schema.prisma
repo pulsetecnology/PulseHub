@@ -31,7 +31,40 @@ model Category {
   description String?
   slug        String    @unique
   supplierId  String?
+  sizeType    String?   // "clothing", "shoes", "accessories", "children", "custom"
+  customSizes String?   // JSON string com tamanhos personalizados
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[]
+}
+
+model User {
+  id                    String                     @id @default(cuid())
+  name                  String
+  email                 String                     @unique
+  password              String
+  type                  String // "fornecedor" ou "revendedor"
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  
+  // Relacionamentos como fornecedor
+  supplierRelations     SupplierResellerRelation[] @relation("Supplier")
+  
+  // Relacionamentos como revendedor
+  resellerRelations     SupplierResellerRelation[] @relation("Reseller")
+}
+
+model SupplierResellerRelation {
+  id          Int      @id @default(autoincrement())
+  supplierId  String
+  resellerId  String
+  status      String   @default("pending") // "pending", "approved", "rejected"
+  commission  Float?   @default(10.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  supplier    User     @relation("Supplier", fields: [supplierId], references: [id], onDelete: Cascade)
+  reseller    User     @relation("Reseller", fields: [resellerId], references: [id], onDelete: Cascade)
+  
+  @@unique([supplierId, resellerId])
 }

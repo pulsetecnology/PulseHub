@@ -60,6 +60,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         name: body.name,
         description: body.description,
         slug: body.slug,
+        sizeType: body.sizeType,
+        customSizes: body.customSizes ? JSON.stringify(body.customSizes) : null,
       }
     });
     

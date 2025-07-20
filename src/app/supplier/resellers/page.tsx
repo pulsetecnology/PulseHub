@@ -27,6 +27,7 @@ export default function ResellerManagement() {
   const [revendedores, setRevendedores] = useState<Revendedor[]>([]);
   const [editingCommission, setEditingCommission] = useState<{id: string, value: number} | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -36,11 +37,39 @@ export default function ResellerManagement() {
     } else if (user.type !== "fornecedor") {
       router.push("/");
     } else {
-      // Carrega os revendedores deste fornecedor
-      const revendedoresList = getSupplierResellers(user.id || "1"); // Fallback para o ID 1 (fornecedor teste)
-      setRevendedores(revendedoresList);
+      fetchRevendedores();
     }
   }, [user, router]);
+
+  const fetchRevendedores = async () => {
+    setIsLoading(true);
+    try {
+      // Buscar relacionamentos do fornecedor
+      const response = await fetch(`/api/supplier-reseller-relations?supplierId=${user?.id}`);
+      if (!response.ok) throw new Error('Falha ao buscar revendedores');
+      
+      const relations = await response.json();
+      
+      // Transformar os dados para o formato esperado
+      const revendedoresList = relations.map((relation: any) => ({
+        id: relation.reseller.id,
+        name: relation.reseller.name,
+        email: relation.reseller.email,
+        type: relation.reseller.type,
+        status: relation.status,
+        commission: relation.commission,
+        createdAt: new Date(relation.createdAt),
+        relationId: relation.id
+      }));
+      
+      setRevendedores(revendedoresList);
+    } catch (error) {
+      console.error(error);
+      addToast("Ocorreu um erro ao buscar os revendedores.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filtra revendedores com base no termo de busca e status
   const filteredRevendedores = revendedores.filter(revendedor => {
@@ -53,46 +82,171 @@ export default function ResellerManagement() {
     return matchesSearch && matchesStatus;
   });
 
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [availableResellers, setAvailableResellers] = useState<any[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteCommission, setInviteCommission] = useState(10);
+
   const handleAddRevendedor = () => {
-    router.push("/supplier/resellers/add");
+    setShowInviteModal(true);
+    fetchAvailableResellers();
   };
 
-  const handleApproveReseller = (resellerId: string) => {
-    if (user?.id) {
-      const commission = 10; // Comissão padrão de 10%
-      approveReseller(user.id, resellerId, commission);
+  const fetchAvailableResellers = async () => {
+    try {
+      // Buscar revendedores que não têm relacionamento com este fornecedor
+      const response = await fetch(`/api/users?type=revendedor`);
+      if (!response.ok) throw new Error('Falha ao buscar revendedores');
       
+      const allResellers = await response.json();
+      
+      // Filtrar revendedores que já não estão vinculados a este fornecedor
+      const currentResellerIds = revendedores.map(r => r.id);
+      const available = allResellers.filter((reseller: any) => 
+        !currentResellerIds.includes(reseller.id)
+      );
+      
+      setAvailableResellers(available);
+    } catch (error) {
+      console.error(error);
+      addToast("Erro ao buscar revendedores disponíveis.", "error");
+    }
+  };
+
+  const handleInviteReseller = async (resellerId: string) => {
+    try {
+      const response = await fetch('/api/supplier-reseller-relations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          supplierId: user?.id,
+          resellerId: resellerId,
+          status: 'pending',
+          commission: inviteCommission
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao convidar revendedor');
+      }
+
+      addToast('Convite enviado com sucesso!', 'success');
+      setShowInviteModal(false);
+      fetchRevendedores(); // Atualizar lista
+    } catch (error: any) {
+      console.error(error);
+      addToast(error.message || 'Erro ao enviar convite.', 'error');
+    }
+  };
+
+  const handleInviteByEmail = async () => {
+    if (!inviteEmail.trim()) {
+      addToast('Por favor, digite um email válido.', 'error');
+      return;
+    }
+
+    try {
+      // Primeiro, verificar se existe um usuário com este email
+      const usersResponse = await fetch(`/api/users?type=revendedor`);
+      if (!usersResponse.ok) throw new Error('Falha ao buscar usuários');
+      
+      const allUsers = await usersResponse.json();
+      const existingUser = allUsers.find((u: any) => u.email === inviteEmail);
+
+      if (existingUser) {
+        // Se o usuário existe, criar relacionamento
+        await handleInviteReseller(existingUser.id);
+      } else {
+        // Se não existe, mostrar mensagem para o usuário se cadastrar
+        addToast('Usuário não encontrado. O revendedor deve se cadastrar primeiro em /register', 'info');
+      }
+    } catch (error: any) {
+      console.error(error);
+      addToast(error.message || 'Erro ao processar convite.', 'error');
+    }
+  };
+
+  const handleApproveReseller = async (resellerId: string) => {
+    try {
+      // Encontrar o relacionamento
+      const revendedor = revendedores.find(r => r.id === resellerId);
+      if (!revendedor || !revendedor.relationId) return;
+
+      const response = await fetch(`/api/supplier-reseller-relations/${revendedor.relationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'approved'
+        })
+      });
+
+      if (!response.ok) throw new Error('Falha ao aprovar revendedor');
+
       // Atualiza a lista de revendedores
       setRevendedores(prev => 
         prev.map(r => 
           r.id === resellerId 
-            ? { ...r, status: "approved", commission } 
+            ? { ...r, status: "approved" } 
             : r
         )
       );
       addToast("Revendedor aprovado com sucesso!", "success");
+    } catch (error) {
+      console.error(error);
+      addToast("Erro ao aprovar revendedor.", "error");
     }
   };
 
-  const handleRejectReseller = (resellerId: string) => {
-    // Implementação simulada de rejeição
-    setRevendedores(prev => 
-      prev.map(r => 
-        r.id === resellerId 
-          ? { ...r, status: "rejected" } 
-          : r
-      )
-    );
-    addToast("Revendedor rejeitado com sucesso!", "info");
+  const handleRejectReseller = async (resellerId: string) => {
+    try {
+      // Encontrar o relacionamento
+      const revendedor = revendedores.find(r => r.id === resellerId);
+      if (!revendedor || !revendedor.relationId) return;
+
+      const response = await fetch(`/api/supplier-reseller-relations/${revendedor.relationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'rejected'
+        })
+      });
+
+      if (!response.ok) throw new Error('Falha ao rejeitar revendedor');
+
+      // Atualiza a lista de revendedores
+      setRevendedores(prev => 
+        prev.map(r => 
+          r.id === resellerId 
+            ? { ...r, status: "rejected" } 
+            : r
+        )
+      );
+      addToast("Revendedor rejeitado com sucesso!", "info");
+    } catch (error) {
+      console.error(error);
+      addToast("Erro ao rejeitar revendedor.", "error");
+    }
   };
 
-  const handleUpdateCommission = (resellerId: string) => {
+  const handleUpdateCommission = async (resellerId: string) => {
     if (!editingCommission) return;
     
-    // Atualiza a comissão do revendedor
-    if (user?.id) {
-      approveReseller(user.id, resellerId, editingCommission.value);
-      
+    try {
+      // Encontrar o relacionamento
+      const revendedor = revendedores.find(r => r.id === resellerId);
+      if (!revendedor || !revendedor.relationId) return;
+
+      const response = await fetch(`/api/supplier-reseller-relations/${revendedor.relationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commission: editingCommission.value
+        })
+      });
+
+      if (!response.ok) throw new Error('Falha ao atualizar comissão');
+
       // Atualiza a lista de revendedores
       setRevendedores(prev => 
         prev.map(r => 
@@ -105,6 +259,73 @@ export default function ResellerManagement() {
       // Limpa o estado de edição
       setEditingCommission(null);
       addToast("Comissão atualizada com sucesso!", "success");
+    } catch (error) {
+      console.error(error);
+      addToast("Erro ao atualizar comissão.", "error");
+    }
+  };
+
+  const handleSendEmail = (email?: string) => {
+    if (!email) {
+      addToast("Email não disponível.", "error");
+      return;
+    }
+    
+    // Abrir cliente de email padrão
+    const subject = encodeURIComponent("Contato - Parceria de Revenda");
+    const body = encodeURIComponent(`Olá,\n\nEspero que esteja bem!\n\nGostaria de entrar em contato sobre nossa parceria de revenda.\n\nAtenciosamente,\n${user?.name || 'Fornecedor'}`);
+    
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+    addToast("Cliente de email aberto!", "info");
+  };
+
+  const handleUnlinkReseller = async (resellerId: string) => {
+    const revendedor = revendedores.find(r => r.id === resellerId);
+    
+    if (!confirm(`Tem certeza que deseja desvincular ${revendedor?.name}? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      if (!revendedor || !revendedor.relationId) return;
+
+      const response = await fetch(`/api/supplier-reseller-relations/${revendedor.relationId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Falha ao desvincular revendedor');
+
+      // Remove o revendedor da lista
+      setRevendedores(prev => prev.filter(r => r.id !== resellerId));
+      addToast(`${revendedor.name} foi desvinculado com sucesso.`, "success");
+    } catch (error) {
+      console.error(error);
+      addToast("Erro ao desvincular revendedor.", "error");
+    }
+  };
+
+  const handleRemoveRejected = async (resellerId: string) => {
+    const revendedor = revendedores.find(r => r.id === resellerId);
+    
+    if (!confirm(`Tem certeza que deseja remover ${revendedor?.name} da sua listagem? Isso permitirá convidá-lo novamente no futuro.`)) {
+      return;
+    }
+
+    try {
+      if (!revendedor || !revendedor.relationId) return;
+
+      const response = await fetch(`/api/supplier-reseller-relations/${revendedor.relationId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Falha ao remover revendedor rejeitado');
+
+      // Remove o revendedor da lista
+      setRevendedores(prev => prev.filter(r => r.id !== resellerId));
+      addToast(`${revendedor.name} foi removido da listagem. Você pode convidá-lo novamente quando desejar.`, "success");
+    } catch (error) {
+      console.error(error);
+      addToast("Erro ao remover revendedor rejeitado.", "error");
     }
   };
 
@@ -156,7 +377,7 @@ export default function ResellerManagement() {
             className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
           >
             <FiPlus className="mr-2" />
-            Adicionar Revendedor
+            Convidar Revendedor
           </button>
         </div>
 
@@ -296,39 +517,45 @@ export default function ResellerManagement() {
                               <button
                                 onClick={() => handleApproveReseller(revendedor.id)}
                                 className="text-green-500 hover:text-green-700 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/30"
-                                title="Aprovar"
+                                title="Aprovar Vínculo"
                               >
                                 <FiCheck size={18} />
                               </button>
                               <button
                                 onClick={() => handleRejectReseller(revendedor.id)}
                                 className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
-                                title="Rejeitar"
+                                title="Rejeitar Vínculo"
                               >
                                 <FiX size={18} />
                               </button>
                             </>
-                          ) : (
+                          ) : revendedor.status === "approved" ? (
                             <>
                               <button
+                                onClick={() => handleSendEmail(revendedor.email)}
                                 className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                                title="Enviar email"
+                                title="Enviar Email"
                               >
                                 <FiMail size={18} />
                               </button>
                               <button
-                                className="text-green-500 hover:text-green-700 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/30"
-                                title="Editar"
-                              >
-                                <FiEdit size={18} />
-                              </button>
-                              <button
+                                onClick={() => handleUnlinkReseller(revendedor.id)}
                                 className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
-                                title="Desativar"
+                                title="Desvincular Revendedor"
                               >
                                 <FiTrash2 size={18} />
                               </button>
                             </>
+                          ) : revendedor.status === "rejected" ? (
+                            <button
+                              onClick={() => handleRemoveRejected(revendedor.id)}
+                              className="text-orange-500 hover:text-orange-700 p-1 rounded-full hover:bg-orange-100 dark:hover:bg-orange-900/30"
+                              title="Remover da Listagem (permite convidar novamente)"
+                            >
+                              <FiTrash2 size={18} />
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
                           )}
                         </div>
                       </td>
@@ -346,21 +573,101 @@ export default function ResellerManagement() {
           </div>
         </div>
 
+        {/* Modal de Convite para Revendedores */}
+        {showInviteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Convidar Revendedor</h3>
+              
+              {/* Buscar por email */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Convidar por Email</h4>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={inviteCommission}
+                    onChange={(e) => setInviteCommission(Number(e.target.value))}
+                    className="w-20 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-center"
+                    placeholder="10"
+                  />
+                  <span className="flex items-center text-gray-500 dark:text-gray-400">%</span>
+                  <button
+                    onClick={handleInviteByEmail}
+                    className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover"
+                  >
+                    Convidar
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  O revendedor deve estar cadastrado no sistema. Se não estiver, ele receberá uma mensagem para se cadastrar primeiro.
+                </p>
+              </div>
+
+              {/* Lista de revendedores disponíveis */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Revendedores Disponíveis ({availableResellers.length})
+                </h4>
+                {availableResellers.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-md">
+                    {availableResellers.map((reseller) => (
+                      <div key={reseller.id} className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">{reseller.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{reseller.email}</div>
+                        </div>
+                        <button
+                          onClick={() => handleInviteReseller(reseller.id)}
+                          className="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600"
+                        >
+                          Convidar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    Não há revendedores disponíveis para convite. Todos os revendedores cadastrados já estão vinculados a você.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowInviteModal(false)}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Informações sobre revendedores */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Sobre os Revendedores</h2>
           <div className="space-y-4 text-gray-600 dark:text-gray-400">
             <p>
-              <strong>O que são revendedores?</strong> Revendedores são parceiros que têm acesso ao seu catálogo de produtos e podem fazer pedidos para revenda.
+              <strong>Nova Arquitetura:</strong> Agora os revendedores se cadastram diretamente no sistema via /register. Você os convida e gerencia os relacionamentos aqui.
             </p>
             <p>
-              <strong>Como adicionar um revendedor?</strong> Clique no botão "Adicionar Revendedor" acima e preencha o formulário com os dados do revendedor. O sistema enviará um convite por email para que o revendedor complete seu cadastro.
+              <strong>Como funciona?</strong> 1) Revendedor se cadastra em /register, 2) Você o convida aqui, 3) Você aprova/rejeita e define comissões.
             </p>
             <p>
-              <strong>Como gerenciar revendedores?</strong> Você pode aprovar ou rejeitar solicitações de revendedores, definir comissões personalizadas, editar dados e desativar o acesso quando necessário.
+              <strong>Relacionamento N:N:</strong> Um revendedor pode trabalhar com vários fornecedores, e você pode ter vários revendedores, cada um com sua comissão específica.
             </p>
             <p>
-              <strong>O que são comissões?</strong> As comissões definem a porcentagem que o revendedor ganha sobre as vendas dos seus produtos. Você pode personalizar a comissão para cada revendedor.
+              <strong>Comissões:</strong> Defina comissões personalizadas para cada revendedor. A comissão padrão é 10%, mas você pode ajustar conforme necessário.
             </p>
           </div>
         </div>

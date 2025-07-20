@@ -5,9 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNextAuth } from '@/hooks/useNextAuth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FiHome, FiBox, FiUsers, FiLogOut, FiMenu, FiX, FiShoppingBag, FiFilter, FiTag } from 'react-icons/fi';
+import { FiHome, FiBox, FiUsers, FiLogOut, FiMenu, FiX, FiShoppingBag, FiFilter, FiTag, FiBell } from 'react-icons/fi';
 import ThemeToggle from '@/components/ThemeToggle';
 import PulseHubLogo from '@/components/ui/PulseHubLogo';
+import InvitationNotifications from '@/components/InvitationNotifications';
 import { useLoading } from '@/contexts/LoadingContext';
 import { signOut } from "next-auth/react";
 
@@ -23,6 +24,8 @@ const supplierLinks = [
 
 const resellerLinks = [
   { href: '/reseller/dashboard', label: 'Catálogo', icon: FiBox },
+  { href: '/reseller/invitations', label: 'Convites', icon: FiBell },
+  { href: '/reseller/suppliers', label: 'Fornecedores', icon: FiUsers },
   { href: '/reseller/orders', label: 'Meus Pedidos', icon: FiShoppingBag },
   { href: '/reseller/quotes', label: 'Orçamentos', icon: FiFilter },
 ];
@@ -188,6 +191,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
             <PulseHubLogo size="sm" />
           </div>
           <div className="flex items-center space-x-3">
+            <InvitationNotifications />
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
@@ -197,6 +201,13 @@ export default function MainLayout({ children }: { children: ReactNode }) {
             >
               {isMobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
+          </div>
+        </header>
+
+        {/* Desktop Header com Notificações */}
+        <header className="hidden md:flex items-center justify-end p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20">
+          <div className="flex items-center space-x-3">
+            <InvitationNotifications />
           </div>
         </header>
 

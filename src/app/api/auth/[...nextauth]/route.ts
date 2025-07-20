@@ -2,7 +2,10 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 import { UserType } from "@/contexts/AuthContextWithNextAuth";
-import { users } from "@/lib/auth-utils";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -17,12 +20,27 @@ const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // Find user in the mock database
-        const user = users.find(
-          (user) => user.email === credentials.email && user.password === credentials.password
-        );
+        try {
+          // Find user in the database
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          });
 
-        if (user) {
+          if (!user) {
+            console.log('Usuário não encontrado:', credentials.email);
+            return null;
+          }
+
+          // Verify password
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+
+          if (!isPasswordValid) {
+            console.log('Senha inválida para usuário:', credentials.email);
+            return null;
+          }
+
+          console.log('Login bem-sucedido para usuário:', user.email, 'Tipo:', user.type);
+
           // Return user without password
           return {
             id: user.id,
@@ -30,9 +48,10 @@ const authOptions: NextAuthOptions = {
             email: user.email,
             type: user.type,
           };
+        } catch (error) {
+          console.error('Erro durante autenticação:', error);
+          return null;
         }
-
-        return null;
       },
     }),
   ],

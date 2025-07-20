@@ -6,7 +6,8 @@ import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiUpload, FiX, FiAlertCircle, FiPlus } from "react-icons/fi";
 import Link from "next/link";
-import { DEFAULT_TARGET_AUDIENCES, DEFAULT_SIZES } from "@/types/product";
+import { DEFAULT_TARGET_AUDIENCES } from "@/types/product";
+import { getSizesByType } from "@/types/sizes";
 
 import InputBRL from "@/components/forms/InputBRL";
 import ProductSuccessPage from "@/components/ProductSuccessPage";
@@ -39,6 +40,8 @@ interface Category {
   name: string;
   slug: string;
   description?: string;
+  sizeType?: string;
+  customSizes?: string;
 }
 
 export default function AddProductPage() {
@@ -493,26 +496,71 @@ export default function AddProductPage() {
                   Tamanhos disponíveis*
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {formData.category && DEFAULT_SIZES[formData.category as keyof typeof DEFAULT_SIZES] ? (
-                    DEFAULT_SIZES[formData.category as keyof typeof DEFAULT_SIZES].map(size => (
-                      <button
-                        key={size.value}
-                        type="button"
-                        onClick={() => handleSizeToggle(size.value)}
-                        className={`px-3 py-1 text-sm rounded-full ${
-                          formData.sizes.includes(size.value)
-                            ? "bg-primary text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        {size.label}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Selecione uma categoria para ver os tamanhos disponíveis
-                    </p>
-                  )}
+                  {(() => {
+                    if (!formData.category) {
+                      return (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Selecione uma categoria para ver os tamanhos disponíveis
+                        </p>
+                      );
+                    }
+
+                    // Encontrar a categoria selecionada
+                    const selectedCategory = categories.find(cat => cat.slug === formData.category);
+                    
+                    if (selectedCategory && selectedCategory.sizeType) {
+                      // Usar tamanhos da categoria
+                      const availableSizes = getSizesByType(selectedCategory.sizeType, selectedCategory.customSizes);
+                      
+                      if (availableSizes.length > 0) {
+                        return availableSizes.map(size => (
+                          <button
+                            key={size.value}
+                            type="button"
+                            onClick={() => handleSizeToggle(size.value)}
+                            className={`px-3 py-1 text-sm rounded-full ${
+                              formData.sizes.includes(size.value)
+                                ? "bg-primary text-white"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            }`}
+                          >
+                            {size.label}
+                          </button>
+                        ));
+                      }
+                    }
+
+                    // Fallback para categorias antigas sem tipo de tamanho definido
+                    return (
+                      <div className="w-full">
+                        <p className="text-sm text-orange-600 dark:text-orange-400 mb-2">
+                          Esta categoria não tem tipos de tamanho definidos. 
+                          <Link href="/supplier/categories" className="text-primary hover:underline ml-1">
+                            Clique aqui para configurar
+                          </Link>
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Usando tamanhos padrão temporariamente
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {['PP', 'P', 'M', 'G', 'GG'].map(size => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => handleSizeToggle(size)}
+                              className={`px-3 py-1 text-sm rounded-full ${
+                                formData.sizes.includes(size)
+                                  ? "bg-primary text-white"
+                                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              }`}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
                 {errors.sizes && touched.sizes && (
                   <p className="mt-1 text-sm text-red-500 flex items-center">

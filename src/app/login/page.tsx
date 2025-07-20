@@ -47,9 +47,8 @@ export default function LoginPage() {
             </h1>
             
             <div className="mb-4 p-3 bg-blue-100 border border-blue-200 text-blue-700 rounded-md text-sm">
-              <p className="font-medium">Credenciais de teste:</p>
-              <p className="mt-1">Fornecedor: fornecedor@example.com / senha123</p>
-              <p className="mt-1">Revendedor: revendedor@example.com / senha123</p>
+              <p className="font-medium">Novo no sistema?</p>
+              <p className="mt-1">Crie sua conta como fornecedor ou revendedor clicando em "Cadastre-se" abaixo.</p>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">

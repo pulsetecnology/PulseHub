@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
         description: body.description,
         slug: body.slug,
         supplierId: body.supplierId,
+        sizeType: body.sizeType,
+        customSizes: body.customSizes ? JSON.stringify(body.customSizes) : null,
       }
     });
     
