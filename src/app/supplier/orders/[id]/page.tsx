@@ -4,16 +4,41 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import MainLayout from "@/layouts/MainLayout";
-import { FiArrowLeft, FiUser, FiMapPin, FiPhone, FiDollarSign, FiPackage } from "react-icons/fi";
+import { FiArrowLeft, FiUser, FiMapPin, FiPhone, FiDollarSign, FiPackage, FiDownload } from "react-icons/fi";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
+
+interface OrderItem {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  imageUrl: string;
+}
+
+interface ResellerInfo {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+interface Order {
+  id: string;
+  reseller: ResellerInfo;
+  date: string;
+  total: number;
+  status: string;
+  items: OrderItem[];
+  invoiceUrl: string | null;
+}
 
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { addToast } = useToast();
   const orderId = params.id as string;
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -24,7 +49,7 @@ export default function OrderDetailPage() {
       try {
         // In a real application, fetch order details from your API
         // For now, we'll use a mock to simulate fetching
-        const fetchedOrder = {
+        const fetchedOrder: Order = {
           id: orderId,
           reseller: {
             name: "Ana Oliveira",
@@ -72,7 +97,7 @@ export default function OrderDetailPage() {
         throw new Error("Falha ao atualizar o status do pedido.");
       }
 
-      setOrder((prev: any) => ({ ...prev, status: newStatus }));
+      setOrder((prev) => prev ? { ...prev, status: newStatus } : null);
       addToast(`Status do pedido atualizado para ${newStatus}!`, "success");
     } catch (error: any) {
       console.error("Erro ao atualizar status:", error);
@@ -89,7 +114,7 @@ export default function OrderDetailPage() {
       // For now, we'll simulate a successful generation and provide a mock URL
       await new Promise(resolve => setTimeout(resolve, 1500));
       const mockInvoiceUrl = `https://example.com/invoice/${orderId}-${Date.now()}.pdf`;
-      setOrder((prev: any) => ({ ...prev, invoiceUrl: mockInvoiceUrl }));
+      setOrder((prev) => prev ? { ...prev, invoiceUrl: mockInvoiceUrl } : null);
       addToast("Nota fiscal gerada com sucesso!", "success");
     } catch (error) {
       console.error("Erro ao gerar nota fiscal:", error);
@@ -113,6 +138,22 @@ export default function OrderDetailPage() {
         return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{status}</span>;
     }
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <p>Carregando...</p>
+      </MainLayout>
+    );
+  }
+
+  if (!order) {
+    return (
+      <MainLayout>
+        <p>Pedido não encontrado.</p>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

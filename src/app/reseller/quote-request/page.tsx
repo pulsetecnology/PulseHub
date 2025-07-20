@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/layouts/MainLayout';
 import { useCart } from '@/contexts/CartContext';
@@ -15,9 +15,13 @@ export default function QuoteRequestPage() {
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      router.push('/reseller/cart');
+    }
+  }, [cartItems, router]);
+
   if (cartItems.length === 0) {
-    // Redirect to cart if no items
-    router.push('/reseller/cart');
     return null;
   }
 

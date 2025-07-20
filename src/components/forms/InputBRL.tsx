@@ -10,6 +10,7 @@ interface InputBRLProps {
   required?: boolean;
   id?: string;
   name?: string;
+  onBlur?: () => void;
 }
 
 const InputBRL: React.FC<InputBRLProps> = ({

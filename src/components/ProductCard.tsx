@@ -2,18 +2,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 import { FiEdit, FiTrash2, FiEye, FiPercent, FiTag, FiShoppingCart } from 'react-icons/fi';
-import { DbProduct } from '@/types/product';
+import { Product } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
+import { useToast } from '@/contexts/ToastContext';
 
 interface ProductCardProps {
-  product: DbProduct;
+  product: Product;
   onDelete?: () => void;
   isSupplier?: boolean;
   onToggleFeatured?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, onToggleFeatured, isSupplier = true }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, isSupplier, onToggleFeatured }) => {
   const { addToCart } = useCart();
+  const { addToast } = useToast();
 
   const handleAddToCart = () => {
     addToCart(product, 1);

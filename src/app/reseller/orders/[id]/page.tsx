@@ -7,7 +7,6 @@ import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiUser, FiMapPin, FiPhone, FiDollarSign, FiPackage } from "react-icons/fi";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
-import { useToast } from "@/contexts/ToastContext";
 
 const mockOrder = {
   id: "#1236",

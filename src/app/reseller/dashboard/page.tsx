@@ -7,88 +7,7 @@ import MainLayout from "@/layouts/MainLayout";
 import ProductCard from "@/components/ProductCard";
 import { FiSearch, FiFilter, FiShoppingBag, FiX, FiChevronDown } from "react-icons/fi";
 import { Product } from "@/types/product";
-import { getResellerSuppliers, getResellerProducts } from "@/app/api/auth/[...nextauth]/route";
-
-// Dados mockados para demonstração
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: "Camiseta Básica",
-    description: "Camiseta 100% algodão",
-    price: 49.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Camiseta"],
-    sizes: ["P", "M", "G"],
-    supplierId: "1",
-    supplierName: "Fornecedor Teste",
-    commission: 10,
-  },
-  {
-    id: 2,
-    name: "Calça Jeans",
-    description: "Calça jeans slim",
-    price: 129.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Calça"],
-    sizes: ["38", "40", "42"],
-    supplierId: "1",
-    supplierName: "Fornecedor Teste",
-    commission: 10,
-  },
-  {
-    id: 3,
-    name: "Tênis Casual",
-    description: "Tênis casual confortável",
-    price: 199.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Tênis"],
-    sizes: ["39", "40", "41"],
-    supplierId: "3",
-    supplierName: "Fornecedor Calçados",
-    commission: 15,
-  },
-  {
-    id: 4,
-    name: "Vestido Floral",
-    description: "Vestido estampado floral",
-    price: 159.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Vestido"],
-    sizes: ["P", "M", "G"],
-    supplierId: "4",
-    supplierName: "Fornecedor Moda Feminina",
-    commission: 12,
-  },
-  {
-    id: 5,
-    name: "Camisa Social",
-    description: "Camisa social de algodão",
-    price: 89.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Camisa"],
-    sizes: ["P", "M", "G", "GG"],
-    supplierId: "1",
-    supplierName: "Fornecedor Teste",
-    commission: 10,
-  },
-  {
-    id: 6,
-    name: "Sapato Social",
-    description: "Sapato social em couro",
-    price: 249.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Sapato"],
-    sizes: ["38", "39", "40", "41", "42"],
-    supplierId: "3",
-    supplierName: "Fornecedor Calçados",
-    commission: 15,
-  },
-  {
-    id: 7,
-    name: "Blusa Feminina",
-    description: "Blusa feminina em tecido leve",
-    price: 79.90,
-    imageUrls: ["https://via.placeholder.com/500x500?text=Blusa"],
-    sizes: ["P", "M", "G"],
-    supplierId: "4",
-    supplierName: "Fornecedor Moda Feminina",
-    commission: 12,
-  },
-];
+import { getResellerSuppliers, getResellerProducts, mockProducts } from "@/lib/auth-utils";
 
 // Interface para fornecedor com comissão
 interface SupplierWithCommission {
@@ -137,7 +56,9 @@ export default function ResellerDashboard() {
   });
 
   // Agrupa produtos por fornecedor
-  const groupedProducts = groupBySupplier 
+  type GroupedProductEntry = [string, { supplierName: string; products: Product[] }];
+
+  const groupedProducts: GroupedProductEntry[] = groupBySupplier 
     ? Object.entries(
         filteredProducts.reduce((acc, product) => {
           const supplierId = product.supplierId || 'unknown';

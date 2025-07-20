@@ -6,15 +6,16 @@ import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiEdit, FiTrash2, FiStar, FiTag, FiPackage, FiDollarSign, FiCalendar } from "react-icons/fi";
 import Link from "next/link";
-import { DbProduct } from "@/types/product";
+import { Product } from "@/types/product";
 import { useToast } from "@/contexts/ToastContext";
 
 export default function ProductDetailPage() {
-  const router = useRouter();
   const params = useParams();
+  const router = useRouter();
+  const { addToast } = useToast();
   const productId = Number(params.id);
   const { user } = useNextAuth();
-  const [product, setProduct] = useState<DbProduct | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,16 +25,13 @@ export default function ProductDetailPage() {
       try {
         const res = await fetch(`/api/products/${productId}`);
         if (!res.ok) throw new Error("Produto não encontrado");
-        const fetchedProduct: DbProduct = await res.json();
+        const fetchedProduct: Product = await res.json();
         // Converter strings de data para objetos Date
         fetchedProduct.createdAt = new Date(fetchedProduct.createdAt);
         fetchedProduct.updatedAt = new Date(fetchedProduct.updatedAt);
         setProduct(fetchedProduct);
-        if (fetchedProduct.imageUrls) {
-          const images = fetchedProduct.imageUrls.split('[IMAGE]');
-          if (images.length > 0) {
-            setSelectedImage(images[0]);
-          }
+        if (fetchedProduct.imageUrls && fetchedProduct.imageUrls.length > 0) {
+          setSelectedImage(fetchedProduct.imageUrls[0]);
         }
       } catch (error) {
         console.error("Erro ao buscar produto:", error);
@@ -83,7 +81,7 @@ export default function ProductDetailPage() {
     return null;
   }
 
-  const productImages = product.imageUrls ? product.imageUrls.split('[IMAGE]') : [];
+  const productImages = product.imageUrls || [];
 
   return (
     <MainLayout>
@@ -186,7 +184,7 @@ export default function ProductDetailPage() {
                   <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">Tamanhos disponíveis</h3>
                     <div className="flex flex-wrap gap-2">
-                      {product.sizes.split(',').map(size => (
+                      {product.sizes.map(size => (
                         <span
                           key={size}
                           className="inline-block px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded"

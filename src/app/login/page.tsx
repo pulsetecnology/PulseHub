@@ -46,12 +46,6 @@ export default function LoginPage() {
               Acesse sua conta
             </h1>
             
-            {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-            
             <div className="mb-4 p-3 bg-blue-100 border border-blue-200 text-blue-700 rounded-md text-sm">
               <p className="font-medium">Credenciais de teste:</p>
               <p className="mt-1">Fornecedor: fornecedor@example.com / senha123</p>

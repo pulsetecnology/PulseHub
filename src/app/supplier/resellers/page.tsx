@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import { FiPlus, FiSearch, FiEdit, FiTrash2, FiMail, FiCheck, FiX, FiPercent } from "react-icons/fi";
-import { users, getSupplierResellers, approveReseller } from "@/app/api/auth/[...nextauth]/route";
+import { users, getSupplierResellers, approveReseller } from "@/lib/auth-utils";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
 

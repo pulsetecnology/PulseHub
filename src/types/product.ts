@@ -1,12 +1,12 @@
-export interface DbProduct {
+export interface Product {
   id: number;
   name: string;
   description?: string;
   price: number;
   imageUrls: string[];
   category?: string;
-  sizes?: string;
-  targetAudiences?: string;
+  sizes?: string[];
+  targetAudiences?: string[];
   featured: boolean;
   createdAt: Date;
   updatedAt: Date;

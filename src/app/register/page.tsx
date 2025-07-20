@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PulseHubLogo from "@/components/ui/PulseHubLogo";
-import { registerUser } from "@/app/api/auth/[...nextauth]/route";
+import { registerUser } from "@/lib/auth-utils";
 import { signIn } from "next-auth/react";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -92,11 +92,7 @@ export default function RegisterPage() {
               Crie sua conta
             </h1>
             
-            {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-md text-sm">
-                {error}
-              </div>
-            )}
+            
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

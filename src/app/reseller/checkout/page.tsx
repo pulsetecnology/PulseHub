@@ -6,6 +6,7 @@ import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiLock } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useToast } from "@/contexts/ToastContext";
 
 export default function CheckoutPage() {
@@ -13,8 +14,13 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { addToast } = useToast();
 
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      router.push("/reseller/cart");
+    }
+  }, [cartItems, router]);
+
   if (cartItems.length === 0) {
-    router.push("/reseller/cart");
     return null;
   }
 

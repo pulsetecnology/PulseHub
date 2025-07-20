@@ -4,11 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useNextAuth } from '@/hooks/useNextAuth';
 import MainLayout from '@/layouts/MainLayout';
-import { FiArrowLeft, FiUpload, FiX, FiAlertCircle, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiUpload, FiX, FiAlertCircle, FiTrash2, FiPlus } from 'react-icons/fi';
 import Link from 'next/link';
 import { DEFAULT_TARGET_AUDIENCES, DEFAULT_SIZES } from '@/types/product';
 import InputBRL from '@/components/forms/InputBRL';
-import { DbProduct } from '@/types/product';
+import { Product } from '@/types/product';
 import { useToast } from '@/contexts/ToastContext';
 
 type ValidationErrors = {
@@ -19,6 +19,14 @@ type ValidationErrors = {
   targetAudiences?: string;
   images?: string;
 };
+
+// Interface para categoria
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+}
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -31,9 +39,29 @@ export default function EditProductPage() {
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Carregar categorias
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`/api/categories?supplierId=${user?.id || ''}`);
+        if (res.ok) {
+          const data = await res.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+      }
+    };
+
+    if (user?.id) {
+      fetchCategories();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!productId) return;
@@ -42,32 +70,36 @@ export default function EditProductPage() {
       try {
         const res = await fetch(`/api/products/${productId}`);
         if (!res.ok) throw new Error('Produto não encontrado');
-        const product: DbProduct = await res.json();
+        const product: Product = await res.json();
+        
+        // Garantir que imageUrls seja sempre um array
+        const imageUrls = Array.isArray(product.imageUrls) ? product.imageUrls : [];
+        
         setFormData({
           ...product,
-          sizes: product.sizes ? product.sizes.split(',') : [],
-          targetAudiences: product.targetAudiences ? product.targetAudiences.split(',') : [],
+          sizes: product.sizes || [],
+          targetAudiences: product.targetAudiences || [],
           price: product.price.toString(),
         });
-        setImagePreviewUrls(product.imageUrls ? product.imageUrls.split('[IMAGE]') : []);
+        setImagePreviewUrls(imageUrls);
       } catch (error) {
         console.error(error);
         addToast('Produto não encontrado', "error");
-        router.push('/supplier/dashboard');
+        router.push('/supplier/products');
       }
     };
 
     fetchProduct();
-  }, [productId, router]);
+  }, [productId, router, addToast]);
 
   const validateForm = () => {
     const newErrors: ValidationErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Nome do produto é obrigatório';
+    if (!formData.name?.trim()) newErrors.name = 'Nome do produto é obrigatório';
     if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Preço deve ser maior que zero';
     if (!formData.category) newErrors.category = 'Categoria é obrigatória';
-    if (formData.sizes.length === 0) newErrors.sizes = 'Selecione pelo menos um tamanho';
-    if (formData.targetAudiences.length === 0) newErrors.targetAudiences = 'Selecione pelo menos um público-alvo';
-    if (imagePreviewUrls.length === 0) newErrors.images = 'Adicione pelo menos uma imagem';
+    if (!Array.isArray(formData.sizes) || formData.sizes.length === 0) newErrors.sizes = 'Selecione pelo menos um tamanho';
+    if (!Array.isArray(formData.targetAudiences) || formData.targetAudiences.length === 0) newErrors.targetAudiences = 'Selecione pelo menos um público-alvo';
+    if (!Array.isArray(imagePreviewUrls) || imagePreviewUrls.length === 0) newErrors.images = 'Adicione pelo menos uma imagem';
     return newErrors;
   };
 
@@ -82,10 +114,14 @@ export default function EditProductPage() {
     setIsLoading(true);
 
     try {
-      const data = { ...formData };
-      data.sizes = data.sizes.join(',');
-      data.targetAudiences = data.targetAudiences.join(',');
-      data.imageUrls = imagePreviewUrls.join('[IMAGE]');
+      // Criar uma cópia limpa dos dados para enviar à API
+      const data = {
+        ...formData,
+        // Garantir que os arrays sejam tratados corretamente
+        sizes: Array.isArray(formData.sizes) ? formData.sizes.join(',') : '',
+        targetAudiences: Array.isArray(formData.targetAudiences) ? formData.targetAudiences.join(',') : '',
+        imageUrls: Array.isArray(imagePreviewUrls) ? imagePreviewUrls.join('[IMAGE]') : '',
+      };
 
       const res = await fetch(`/api/products/${productId}`, {
         method: 'PUT',
@@ -96,7 +132,7 @@ export default function EditProductPage() {
       if (!res.ok) throw new Error('Falha ao atualizar o produto');
 
       addToast('Produto atualizado com sucesso!', "success");
-      router.push('/supplier/dashboard');
+      router.push('/supplier/products');
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
       addToast('Ocorreu um erro ao salvar o produto.', "error");
@@ -132,10 +168,12 @@ export default function EditProductPage() {
 
   const handleToggle = (field: 'sizes' | 'targetAudiences', value: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    setFormData((prev: any) => {
-      const items = prev[field].includes(value)
-        ? prev[field].filter((i: string) => i !== value)
-        : [...prev[field], value];
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const currentItems = Array.isArray(prev[field]) ? prev[field] : [];
+      const items = currentItems.includes(value)
+        ? currentItems.filter((i: string) => i !== value)
+        : [...currentItems, value];
       return { ...prev, [field]: items };
     });
   };
@@ -165,7 +203,7 @@ export default function EditProductPage() {
     <MainLayout>
       <div className="space-y-6 max-w-4xl mx-auto">
         <div className="flex items-center mb-6">
-          <Link href="/supplier/dashboard" className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+          <Link href="/supplier/products" className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
             <FiArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
           </Link>
           <div>
@@ -179,26 +217,188 @@ export default function EditProductPage() {
             {/* ... (restante do formulário idêntico ao de adicionar produto) ... */}
             {/* Name, Price, Description, Category, Sizes, Target Audiences, Images, Featured, Buttons */}
             
-            {/* Exemplo do campo de preço usando InputBRL */}
+            {/* Informações básicas */}
             <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preço (R$)*</label>
-              <InputBRL
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={(value) => setFormData((prev: any) => ({ ...prev, price: value }))}
-                onBlur={() => setTouched(prev => ({ ...prev, price: true }))}
-                className={`w-full px-4 py-2 border ${errors.price && touched.price ? 'border-red-500' : 'border-gray-300'} rounded-md`}
-                required
-              />
-              {errors.price && touched.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
+              <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Informações Básicas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Nome do produto*
+                  </label>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
+                    className={`w-full px-4 py-2 border ${
+                      errors.name && touched.name 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
+                    } rounded-md focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                    placeholder="Ex: Camiseta Básica"
+                    required
+                  />
+                  {errors.name && touched.name && (
+                    <p className="mt-1 text-sm text-red-500 flex items-center">
+                      <FiAlertCircle className="mr-1" /> {errors.name}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Preço (R$)*
+                  </label>
+                  <InputBRL
+                    id="price"
+                    name="price"
+                    value={formData.price}
+                    onChange={(value) => setFormData((prev: any) => ({ ...prev, price: value }))}
+                    onBlur={() => setTouched(prev => ({ ...prev, price: true }))}
+                    className={`w-full px-4 py-2 border ${
+                      errors.price && touched.price 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
+                    } rounded-md focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                    required
+                  />
+                  {errors.price && touched.price && (
+                    <p className="mt-1 text-sm text-red-500 flex items-center">
+                      <FiAlertCircle className="mr-1" /> {errors.price}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Descrição
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description || ''}
+                  onChange={handleChange}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Descreva o produto em detalhes..."
+                />
+              </div>
+            </div>
+
+            {/* Categoria e Tamanhos */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Categoria e Tamanhos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Categoria*
+                  </label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, category: true }))}
+                    className={`w-full px-4 py-2 border ${
+                      errors.category && touched.category 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
+                    } rounded-md focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                    required
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))}
+                    {categories.length === 0 && (
+                      <>
+                        <option value="roupas">Roupas</option>
+                        <option value="calcados">Calçados</option>
+                        <option value="acessorios">Acessórios</option>
+                        <option value="infantil">Infantil</option>
+                      </>
+                    )}
+                  </select>
+                  {errors.category && touched.category && (
+                    <p className="mt-1 text-sm text-red-500 flex items-center">
+                      <FiAlertCircle className="mr-1" /> {errors.category}
+                    </p>
+                  )}
+                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                    <Link href="/supplier/categories" className="text-primary hover:underline flex items-center">
+                      <FiPlus size={14} className="mr-1" /> Gerenciar categorias
+                    </Link>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Público-alvo*
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {DEFAULT_TARGET_AUDIENCES.map(audience => (
+                      <button
+                        key={audience.id}
+                        type="button"
+                        onClick={() => handleToggle('targetAudiences', audience.id)}
+                        className={`px-3 py-1 text-sm rounded-full ${
+                          formData.targetAudiences?.includes(audience.id)
+                            ? "bg-primary text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {audience.name}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.targetAudiences && touched.targetAudiences && (
+                    <p className="mt-1 text-sm text-red-500 flex items-center">
+                      <FiAlertCircle className="mr-1" /> {errors.targetAudiences}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Tamanhos disponíveis*
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {formData.category && DEFAULT_SIZES[formData.category as keyof typeof DEFAULT_SIZES] ? (
+                    DEFAULT_SIZES[formData.category as keyof typeof DEFAULT_SIZES].map(size => (
+                      <button
+                        key={size.value}
+                        type="button"
+                        onClick={() => handleToggle('sizes', size.value)}
+                        className={`px-3 py-1 text-sm rounded-full ${
+                          formData.sizes?.includes(size.value)
+                            ? "bg-primary text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {size.label}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Selecione uma categoria para ver os tamanhos disponíveis
+                    </p>
+                  )}
+                </div>
+                {errors.sizes && touched.sizes && (
+                  <p className="mt-1 text-sm text-red-500 flex items-center">
+                    <FiAlertCircle className="mr-1" /> {errors.sizes}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Lógica de Imagens */}
             <div>
               <h2 className="text-xl font-semibold">Imagens</h2>
               <div className="grid grid-cols-3 gap-4 mt-4">
-                {imagePreviewUrls.map((url, index) => (
+                {Array.isArray(imagePreviewUrls) && imagePreviewUrls.map((url, index) => (
                   <div key={index} className="relative">
                     <img src={url} alt={`Preview ${index}`} className="w-full h-auto rounded-md" />
                     <button type="button" onClick={() => handleRemoveImage(index)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1">
@@ -206,7 +406,7 @@ export default function EditProductPage() {
                     </button>
                   </div>
                 ))}
-                {imagePreviewUrls.length < 10 && (
+                {Array.isArray(imagePreviewUrls) && imagePreviewUrls.length < 10 && (
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     <FiUpload className="mx-auto text-gray-400" size={32} />
                     <p>Adicionar Imagem</p>
@@ -226,7 +426,7 @@ export default function EditProductPage() {
               >
                 <FiTrash2 className="inline-block mr-2" /> Excluir Produto
               </button>
-              <Link href="/supplier/dashboard" className="px-4 py-2 border rounded-md">Cancelar</Link>
+              <Link href="/supplier/products" className="px-4 py-2 border rounded-md">Cancelar</Link>
               <button type="submit" disabled={isLoading} className="px-4 py-2 bg-primary text-white rounded-md disabled:opacity-50">
                 {isLoading ? 'Salvando...' : 'Salvar Alterações'}
               </button>

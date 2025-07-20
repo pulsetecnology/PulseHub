@@ -17,7 +17,16 @@ export async function GET() {
         createdAt: 'desc',
       },
     });
-    return NextResponse.json(products);
+    
+    // Formatar os produtos para o frontend
+    const formattedProducts = products.map(product => ({
+      ...product,
+      sizes: product.sizes ? product.sizes.split(',') : [],
+      targetAudiences: product.targetAudiences ? product.targetAudiences.split(',') : [],
+      imageUrls: product.imageUrls ? product.imageUrls.split('[IMAGE]') : [],
+    }));
+    
+    return NextResponse.json(formattedProducts);
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });

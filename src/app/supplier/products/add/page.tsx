@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
-import { FiArrowLeft, FiUpload, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiArrowLeft, FiUpload, FiX, FiAlertCircle, FiPlus } from "react-icons/fi";
 import Link from "next/link";
 import { DEFAULT_TARGET_AUDIENCES, DEFAULT_SIZES } from "@/types/product";
 
@@ -31,10 +31,22 @@ type ValidationErrors = {
   images?: string;
 };
 
+import { useToast } from "@/contexts/ToastContext";
+
+// Interface para categoria
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
 export default function AddProductPage() {
   const router = useRouter();
   const { user } = useNextAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { addToast } = useToast();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -95,6 +107,25 @@ export default function AddProductPage() {
     
     return newErrors;
   };
+
+  // Carregar categorias
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`/api/categories?supplierId=${user?.id || ''}`);
+        if (res.ok) {
+          const data = await res.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+      }
+    };
+
+    if (user?.id) {
+      fetchCategories();
+    }
+  }, [user]);
 
   // Validar quando os campos são alterados
   useEffect(() => {
@@ -405,11 +436,25 @@ export default function AddProductPage() {
                     required
                   >
                     <option value="">Selecione uma categoria</option>
-                    <option value="roupas">Roupas</option>
-                    <option value="calcados">Calçados</option>
-                    <option value="acessorios">Acessórios</option>
-                    <option value="infantil">Infantil</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))}
+                    {categories.length === 0 && (
+                      <>
+                        <option value="roupas">Roupas</option>
+                        <option value="calcados">Calçados</option>
+                        <option value="acessorios">Acessórios</option>
+                        <option value="infantil">Infantil</option>
+                      </>
+                    )}
                   </select>
+                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                    <Link href="/supplier/categories" className="text-primary hover:underline flex items-center">
+                      <FiPlus size={14} className="mr-1" /> Gerenciar categorias
+                    </Link>
+                  </div>
                   {errors.category && touched.category && (
                     <p className="mt-1 text-sm text-red-500 flex items-center">
                       <FiAlertCircle className="mr-1" /> {errors.category}

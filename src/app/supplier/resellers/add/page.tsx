@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
 import { FiArrowLeft, FiMail } from "react-icons/fi";
-import { registerUser } from "@/app/api/auth/[...nextauth]/route";
+import { registerUser } from "@/lib/auth-utils";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -58,7 +58,7 @@ export default function AddReseller() {
       // Criar relacionamento entre fornecedor e revendedor
       if (user?.id && newUser?.id) {
         // Importar a função para criar relacionamento
-        const { createSupplierResellerRelation } = await import("@/app/api/auth/[...nextauth]/route");
+        const { createSupplierResellerRelation } = await import("@/lib/auth-utils");
         
         // Criar relacionamento com status aprovado diretamente
         createSupplierResellerRelation(
@@ -75,14 +75,8 @@ export default function AddReseller() {
       // Show success message
       addToast(`Revendedor ${formData.name} adicionado com sucesso! O revendedor já pode fazer login com as credenciais fornecidas.`, "success");
       
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        sendInvite: true,
-      });
+      // Redirecionar para a página de listagem de revendedores
+      router.push('/supplier/resellers');
       
       // Simulate sending email invitation
       if (formData.sendInvite) {
@@ -115,17 +109,9 @@ export default function AddReseller() {
           </div>
         </div>
 
-        {error && (
-          <div className="p-4 bg-red-100 border border-red-200 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
+        
 
-        {success && (
-          <div className="p-4 bg-green-100 border border-green-200 text-green-700 rounded-lg">
-            {success}
-          </div>
-        )}
+        
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
