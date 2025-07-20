@@ -30,7 +30,7 @@ export default function SupplierDashboard() {
         <div>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Bem-vindo ao seu painel de controle
+            Bem-vindo ao seu painel de bordo
           </p>
         </div>
 

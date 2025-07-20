@@ -11,31 +11,34 @@ import PulseHubLogo from '@/components/ui/PulseHubLogo';
 import InvitationNotifications from '@/components/InvitationNotifications';
 import { useLoading } from '@/contexts/LoadingContext';
 import { signOut } from "next-auth/react";
+import useTranslation from '@/hooks/useTranslation';
 
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutos em milissegundos
 
-const supplierLinks = [
-  { href: '/supplier/dashboard', label: 'Dashboard', icon: FiHome },
-  { href: '/supplier/products', label: 'Meus Produtos', icon: FiBox },
-  { href: '/supplier/categories', label: 'Categorias', icon: FiTag },
-  { href: '/supplier/orders', label: 'Pedidos', icon: FiShoppingBag },
-  { href: '/supplier/resellers', label: 'Revendedores', icon: FiUsers },
+// Definição dos links será feita dinamicamente usando as traduções
+const getSupplierLinks = (t: (key: string) => string) => [
+  { href: '/supplier/dashboard', label: t('navigation.dashboard'), icon: FiHome },
+  { href: '/supplier/products', label: t('navigation.products'), icon: FiBox },
+  { href: '/supplier/categories', label: t('navigation.categories'), icon: FiTag },
+  { href: '/supplier/orders', label: t('navigation.orders'), icon: FiShoppingBag },
+  { href: '/supplier/resellers', label: t('navigation.resellers'), icon: FiUsers },
 ];
 
-const resellerLinks = [
-  { href: '/reseller/products', label: 'Catálogo', icon: FiBox },
-  { href: '/reseller/invitations', label: 'Convites', icon: FiBell },
-  { href: '/reseller/suppliers', label: 'Fornecedores', icon: FiUsers },
-  { href: '/reseller/orders', label: 'Meus Pedidos', icon: FiShoppingBag },
-  { href: '/reseller/quotes', label: 'Orçamentos', icon: FiFilter },
+const getResellerLinks = (t: (key: string) => string) => [
+  { href: '/reseller/products', label: t('navigation.catalog'), icon: FiBox },
+  { href: '/reseller/invitations', label: t('navigation.invitations'), icon: FiBell },
+  { href: '/reseller/suppliers', label: t('navigation.suppliers'), icon: FiUsers },
+  { href: '/reseller/orders', label: t('navigation.myOrders'), icon: FiShoppingBag },
+  { href: '/reseller/quotes', label: t('navigation.quotes'), icon: FiFilter },
 ];
 
 const Sidebar = () => {
   const { user, logout } = useNextAuth();
   const router = useRouter();
+  const { t } = useTranslation();
   // Força o tipo para garantir que os links sejam exibidos corretamente
   const userType = user?.type || 'fornecedor';
-  const links = userType === 'fornecedor' ? supplierLinks : resellerLinks;
+  const links = userType === 'fornecedor' ? getSupplierLinks(t) : getResellerLinks(t);
 
   const handleLogout = async () => {
     await logout();
@@ -83,7 +86,7 @@ const Sidebar = () => {
                 {user?.name || "Usuário"}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate capitalize">
-                {userType} • Ver perfil
+                {userType} • {t('auth.profile')}
               </p>
             </div>
           </Link>
@@ -93,8 +96,8 @@ const Sidebar = () => {
             <button
               onClick={handleLogout}
               className="group p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 transition-all duration-200 transform hover:scale-105"
-              aria-label="Logout"
-              title="Sair"
+              aria-label={t('auth.logout')}
+              title={t('auth.logout')}
             >
               <FiLogOut size={18} className="transform rotate-180" />
             </button>
@@ -136,17 +139,19 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     }
   }, [user, resetInactivityTimer]);
 
+  const { t } = useTranslation();
+  
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Negado</h2>
-          <p className="text-gray-600 mb-4">Você precisa estar logado para acessar esta página.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('auth.accessDenied')}</h2>
+          <p className="text-gray-600 mb-4">{t('auth.loginRequired')}</p>
           <button
             onClick={() => router.push('/login')}
             className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover"
           >
-            Ir para Login
+            {t('auth.goToLogin')}
           </button>
         </div>
       </div>
@@ -218,7 +223,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="flex flex-col items-center text-white">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
-            <p className="mt-4 text-lg">Carregando...</p>
+            <p className="mt-4 text-lg">{t('status.loading')}</p>
           </div>
         </div>
       )}

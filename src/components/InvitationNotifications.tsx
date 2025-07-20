@@ -3,6 +3,7 @@ import { useNextAuth } from '@/hooks/useNextAuth';
 import { FiCheck, FiX, FiBell } from 'react-icons/fi';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
+import useTranslation from '@/hooks/useTranslation';
 
 interface Invitation {
   id: string;
@@ -18,6 +19,7 @@ export default function InvitationNotifications() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const { addToast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (user && user.type === 'revendedor') {
@@ -61,10 +63,10 @@ export default function InvitationNotifications() {
 
       // Remove o convite da lista
       setInvitations(prev => prev.filter(inv => inv.relationId !== relationId));
-      addToast("Convite aceito com sucesso!", "success");
+      addToast(t('notifications.inviteAccepted'), "success");
     } catch (error) {
       console.error(error);
-      addToast("Erro ao aceitar convite.", "error");
+      addToast(t('notifications.errorAccepting'), "error");
     }
   };
 
@@ -82,10 +84,10 @@ export default function InvitationNotifications() {
 
       // Remove o convite da lista
       setInvitations(prev => prev.filter(inv => inv.relationId !== relationId));
-      addToast("Convite rejeitado.", "info");
+      addToast(t('notifications.inviteRejected'), "info");
     } catch (error) {
       console.error(error);
-      addToast("Erro ao rejeitar convite.", "error");
+      addToast(t('notifications.errorRejecting'), "error");
     }
   };
 
@@ -99,7 +101,7 @@ export default function InvitationNotifications() {
         onClick={() => setShowDropdown(!showDropdown)}
         className="relative p-1 rounded-full text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
       >
-        <span className="sr-only">Ver notificações</span>
+        <span className="sr-only">{t('notifications.view')}</span>
         <FiBell size={20} />
         <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-500 text-xs text-white text-center">
           {invitations.length}
@@ -110,7 +112,7 @@ export default function InvitationNotifications() {
         <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
           <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
             <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="font-medium">Convites de Fornecedores</h3>
+              <h3 className="font-medium">{t('notifications.supplierInvitations')}</h3>
             </div>
             
             <div className="max-h-60 overflow-y-auto">
@@ -122,7 +124,7 @@ export default function InvitationNotifications() {
                         {invitation.supplierName}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Comissão: {invitation.commission}%
+                        {t('notifications.commission')}: {invitation.commission}%
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {invitation.createdAt.toLocaleDateString()}
@@ -132,14 +134,14 @@ export default function InvitationNotifications() {
                       <button
                         onClick={() => handleAcceptInvitation(invitation.relationId)}
                         className="p-1 rounded-full text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                        title="Aceitar"
+                        title={t('notifications.accept')}
                       >
                         <FiCheck size={16} />
                       </button>
                       <button
                         onClick={() => handleRejectInvitation(invitation.relationId)}
                         className="p-1 rounded-full text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
-                        title="Rejeitar"
+                        title={t('notifications.reject')}
                       >
                         <FiX size={16} />
                       </button>
@@ -155,7 +157,7 @@ export default function InvitationNotifications() {
                 className="text-xs text-primary hover:text-primary-hover"
                 onClick={() => setShowDropdown(false)}
               >
-                Ver todos os fornecedores
+                {t('notifications.viewAllSuppliers')}
               </Link>
             </div>
           </div>
