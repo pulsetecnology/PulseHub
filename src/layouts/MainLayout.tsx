@@ -23,7 +23,7 @@ const supplierLinks = [
 ];
 
 const resellerLinks = [
-  { href: '/reseller/dashboard', label: 'Catálogo', icon: FiBox },
+  { href: '/reseller/products', label: 'Catálogo', icon: FiBox },
   { href: '/reseller/invitations', label: 'Convites', icon: FiBell },
   { href: '/reseller/suppliers', label: 'Fornecedores', icon: FiUsers },
   { href: '/reseller/orders', label: 'Meus Pedidos', icon: FiShoppingBag },

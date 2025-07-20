@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useNextAuth } from "@/hooks/useNextAuth";
 import MainLayout from "@/layouts/MainLayout";
-import { FiSearch, FiFilter, FiGrid, FiList, FiShoppingBag } from "react-icons/fi";
+import { FiSearch, FiFilter, FiGrid, FiList, FiShoppingBag, FiChevronDown, FiX } from "react-icons/fi";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
 import ImageFallback from "@/components/ImageFallback";
@@ -21,6 +21,14 @@ interface Product {
   featured: boolean;
   supplierId: string;
   supplierName: string;
+  commission?: number;
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  email?: string;
+  commission?: number;
 }
 
 export default function ResellerProductsPage() {
@@ -29,11 +37,15 @@ export default function ResellerProductsPage() {
   const supplierId = searchParams.get('supplierId');
   const { user } = useNextAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [supplierFilter, setSupplierFilter] = useState<string>(supplierId || "all");
   const [categories, setCategories] = useState<string[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [groupBySupplier, setGroupBySupplier] = useState(false);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -42,9 +54,33 @@ export default function ResellerProductsPage() {
     } else if (user.type !== "revendedor") {
       router.push("/");
     } else {
+      fetchSuppliers();
       fetchProducts();
     }
   }, [user, router, supplierId]);
+  
+  const fetchSuppliers = async () => {
+    try {
+      // Buscar fornecedores aprovados para este revendedor
+      const response = await fetch(`/api/supplier-reseller-relations?resellerId=${user?.id}&status=approved`);
+      if (!response.ok) throw new Error('Falha ao buscar fornecedores');
+      
+      const relations = await response.json();
+      
+      // Transformar os dados para o formato esperado
+      const suppliersList = relations.map((relation: any) => ({
+        id: relation.supplier.id,
+        name: relation.supplier.name,
+        email: relation.supplier.email,
+        commission: relation.commission
+      }));
+      
+      setSuppliers(suppliersList);
+    } catch (error) {
+      console.error(error);
+      addToast("Ocorreu um erro ao buscar os fornecedores.", "error");
+    }
+  };
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -72,7 +108,7 @@ export default function ResellerProductsPage() {
     }
   };
 
-  // Filtrar produtos com base no termo de busca e categoria
+  // Filtrar produtos com base no termo de busca, categoria e fornecedor
   const filteredProducts = products.filter(product => {
     const matchesSearch = 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,9 +116,29 @@ export default function ResellerProductsPage() {
       product.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    const matchesSupplier = supplierFilter === "all" || product.supplierId === supplierFilter;
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesSupplier;
   });
+  
+  // Agrupar produtos por fornecedor se necessário
+  type GroupedProductEntry = [string, { supplierName: string; products: Product[] }];
+
+  const groupedProducts: GroupedProductEntry[] = groupBySupplier 
+    ? Object.entries(
+        filteredProducts.reduce((acc, product) => {
+          const supplierId = product.supplierId || 'unknown';
+          if (!acc[supplierId]) {
+            acc[supplierId] = {
+              supplierName: product.supplierName || 'Fornecedor Desconhecido',
+              products: []
+            };
+          }
+          acc[supplierId].products.push(product);
+          return acc;
+        }, {} as Record<string, { supplierName: string; products: Product[] }>)
+      )
+    : [['all', { supplierName: 'Todos os Produtos', products: filteredProducts }]];
 
   // Formatar preço
   const formatPrice = (price: number) => {
@@ -150,22 +206,116 @@ export default function ResellerProductsPage() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
             />
           </div>
-          <div className="flex items-center">
-            <FiFilter className="mr-2 text-gray-500 dark:text-gray-400" />
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value="all">Todas as categorias</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <button 
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+              >
+                <FiFilter className="mr-2" />
+                Filtros
+                <FiChevronDown className="ml-2" />
+              </button>
+              
+              {isFilterOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10 border border-gray-200 dark:border-gray-700">
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-medium text-gray-800 dark:text-white">Filtros</h3>
+                      <button onClick={() => setIsFilterOpen(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <FiX size={18} />
+                      </button>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Fornecedor
+                      </label>
+                      <select
+                        value={supplierFilter}
+                        onChange={(e) => setSupplierFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="all">Todos os fornecedores</option>
+                        {suppliers.map(supplier => (
+                          <option key={supplier.id} value={supplier.id}>
+                            {supplier.name} {supplier.commission ? `(${supplier.commission}%)` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Categoria
+                      </label>
+                      <select
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="all">Todas as categorias</option>
+                        {categories.map((category) => (
+                          <option key={category} value={category}>
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={groupBySupplier}
+                          onChange={(e) => setGroupBySupplier(e.target.checked)}
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                          Agrupar por fornecedor
+                        </span>
+                      </label>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setSupplierFilter("all");
+                        setCategoryFilter("all");
+                        setGroupBySupplier(false);
+                        setIsFilterOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary"
+                    >
+                      Limpar filtros
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+        
+        {/* Informações sobre fornecedores */}
+        {suppliers.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+            <h2 className="text-lg font-medium text-blue-800 dark:text-blue-300 mb-2">Seus Fornecedores</h2>
+            <div className="flex flex-wrap gap-2">
+              {suppliers.map(supplier => (
+                <div 
+                  key={supplier.id}
+                  className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors ${
+                    supplierFilter === supplier.id 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30'
+                  }`}
+                  onClick={() => setSupplierFilter(supplierFilter === supplier.id ? "all" : supplier.id)}
+                >
+                  {supplier.name} {supplier.commission ? `(${supplier.commission}%)` : ''}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Lista de produtos */}
         {isLoading ? (

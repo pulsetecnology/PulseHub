@@ -9,10 +9,89 @@ async function fileToBase64(file: File): Promise<string> {
   return `data:${file.type};base64,${buffer.toString('base64')}`;
 }
 
-// GET: Listar todos os produtos
-export async function GET() {
+// GET: Listar produtos com filtros
+export async function GET(req: NextRequest) {
   try {
+    const supplierId = req.nextUrl.searchParams.get('supplierId');
+    const resellerId = req.nextUrl.searchParams.get('resellerId');
+    const resellerView = req.nextUrl.searchParams.get('resellerView') === 'true';
+    
+    let whereClause: any = {};
+    let supplierIds: string[] = [];
+    
+    // Se for uma visualização de revendedor e tiver um ID de revendedor
+    if (resellerView && resellerId) {
+      // Buscar todos os fornecedores aprovados para este revendedor
+      const relations = await prisma.supplierResellerRelation.findMany({
+        where: {
+          resellerId: resellerId,
+          status: 'approved'
+        },
+        select: {
+          supplierId: true,
+          commission: true,
+          supplier: {
+            select: {
+              name: true
+            }
+          }
+        }
+      });
+      
+      // Extrair IDs dos fornecedores
+      supplierIds = relations.map(relation => relation.supplierId);
+      
+      // Se não houver fornecedores aprovados, retornar lista vazia
+      if (supplierIds.length === 0) {
+        return NextResponse.json([]);
+      }
+      
+      // Se tiver um fornecedor específico, filtrar apenas por ele
+      if (supplierId) {
+        // Verificar se o fornecedor está na lista de aprovados
+        if (!supplierIds.includes(supplierId)) {
+          return NextResponse.json([]);
+        }
+        whereClause.supplierId = supplierId;
+      } else {
+        // Caso contrário, filtrar por todos os fornecedores aprovados
+        whereClause.supplierId = {
+          in: supplierIds
+        };
+      }
+      
+      // Buscar produtos com o filtro
+      const products = await prisma.product.findMany({
+        where: whereClause,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      
+      // Formatar os produtos para o frontend e adicionar comissão
+      const formattedProducts = products.map(product => {
+        // Encontrar a relação correspondente para obter a comissão
+        const relation = relations.find(r => r.supplierId === product.supplierId);
+        
+        return {
+          ...product,
+          sizes: product.sizes ? product.sizes.split(',') : [],
+          targetAudiences: product.targetAudiences ? product.targetAudiences.split(',') : [],
+          imageUrls: product.imageUrls ? product.imageUrls.split('[IMAGE]') : [],
+          commission: relation ? relation.commission : undefined
+        };
+      });
+      
+      return NextResponse.json(formattedProducts);
+    } 
+    // Caso seja uma busca por fornecedor específico (sem ser visualização de revendedor)
+    else if (supplierId) {
+      whereClause.supplierId = supplierId;
+    }
+    
+    // Busca padrão de produtos
     const products = await prisma.product.findMany({
+      where: whereClause,
       orderBy: {
         createdAt: 'desc',
       },
