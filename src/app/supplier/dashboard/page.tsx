@@ -125,7 +125,7 @@ export default function SupplierDashboard() {
           </div>
 
           {/* Revendedores ativos */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/20">
+          <div className="lg:col-span-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/20">
             <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Revendedores ativos</h2>
             <div className="space-y-4">
               <div className="flex items-center">

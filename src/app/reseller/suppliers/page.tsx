@@ -334,7 +334,7 @@ export default function SuppliersPage() {
                                                             <button
                                                                 onClick={() => handleRejectInvitation(fornecedor.id)}
                                                                 className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
-                                                                title="Rejeitar Convite"
+                                                            title="Rejeitar Convite"
                                                             >
                                                                 <FiX size={18} />
                                                             </button>

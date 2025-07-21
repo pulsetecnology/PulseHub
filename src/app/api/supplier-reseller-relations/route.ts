@@ -98,12 +98,6 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
     
-    if (!reseller) {
-      return NextResponse.json({ 
-        error: `Revendedor com ID ${body.resellerId} não encontrado` 
-      }, { status: 400 });
-    }
-    
     if (supplier.type !== 'fornecedor') {
       return NextResponse.json({ 
         error: 'O usuário fornecedor deve ter tipo "fornecedor"' 

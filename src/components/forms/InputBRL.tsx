@@ -46,7 +46,7 @@ const InputBRL: React.FC<InputBRLProps> = ({
 
   // Atualizar o valor formatado quando o valor externo mudar
   useEffect(() => {
-    if (value) {
+    if (value !== undefined && value !== null) {
       // Converter o valor para centavos
       const cents = Math.round(parseFloat(value) * 100).toString();
       setCentavos(cents);
@@ -57,7 +57,6 @@ const InputBRL: React.FC<InputBRLProps> = ({
     }
   }, [value]);
 
-  // Lida com o colar de valores
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedText = e.clipboardData.getData('text');

@@ -77,8 +77,18 @@ export default function ProductDetailPage() {
     }
   };
 
-  if (!user || user.type !== "fornecedor" || !product) {
+  if (!user || user.type !== "fornecedor") {
     return null;
+  }
+
+  if (!product) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
   }
 
   const productImages = product.imageUrls || [];

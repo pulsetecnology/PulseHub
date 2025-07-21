@@ -1,8 +1,7 @@
 'use client';
 
 import MainLayout from '@/layouts/MainLayout';
-import { useState } from 'react';
-import { FiSearch, FiCalendar } from 'react-icons/fi';
+import { useState }mport { FiSearch, FiCalendar } from 'react-icons/fi';
 
 const mockSalesData = [
   { id: 'S001', date: '2024-07-01', product: 'Camiseta Básica', quantity: 10, price: 49.90, total: 499.00 },

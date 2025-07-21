@@ -237,9 +237,9 @@ export default function EditProductPage() {
                     onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
                     className={`w-full px-4 py-2 border ${
                       errors.name && touched.name 
-                        ? 'border-red-500 focus:ring-red-500' 
-                        : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
-                    } rounded-md focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                        ? 'border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                     placeholder="Ex: Camiseta Básica"
                     required
                   />
@@ -261,9 +261,9 @@ export default function EditProductPage() {
                     onBlur={() => setTouched(prev => ({ ...prev, price: true }))}
                     className={`w-full px-4 py-2 border ${
                       errors.price && touched.price 
-                        ? 'border-red-500 focus:ring-red-500' 
-                        : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
-                    } rounded-md focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                        ? 'border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                     required
                   />
                   {errors.price && touched.price && (
@@ -324,9 +324,9 @@ export default function EditProductPage() {
                     onBlur={() => setTouched(prev => ({ ...prev, category: true }))}
                     className={`w-full px-4 py-2 border ${
                       errors.category && touched.category 
-                        ? 'border-red-500 focus:ring-red-500' 
-                        : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
-                    } rounded-md focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                        ? 'border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-md focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                     required
                   >
                     <option value="">Selecione uma categoria</option>
@@ -340,7 +340,7 @@ export default function EditProductPage() {
                         <option value="roupas">Roupas</option>
                         <option value="calcados">Calçados</option>
                         <option value="acessorios">Acessórios</option>
-                        <option value="infantil">Infantil</option>
+                        <option value="infantil">Infantil</n>
                       </>
                     )}
                   </select>
@@ -494,7 +494,8 @@ export default function EditProductPage() {
                 <FiTrash2 className="inline-block mr-2" /> Excluir Produto
               </button>
               <Link href="/supplier/products" className="px-4 py-2 border rounded-md">Cancelar</Link>
-              <button type="submit" disabled={isLoading} className="px-4 py-2 bg-primary text-white rounded-md disabled:opacity-50">
+              <button type="submit" disabled={isLoading} className="px-4 py-2 bg-primary text-white rounded-md disabled:opacity-50"
+              >
                 {isLoading ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>

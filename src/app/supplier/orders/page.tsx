@@ -1,11 +1,10 @@
-
 "use client";
 
-import { useState } from "react";
-import MainLayout from "@/layouts/MainLayout";
-import { FiSearch, FiFilter } from "react-icons/fi";
+import { useState } from 'react';
+import MainLayout from '@/layouts/MainLayout';
+import { FiSearch, FiFilter } from 'react-icons/fi';
 
-import Link from "next/link";
+import Link from 'next/link';
 
 const mockOrders = [
   { id: "1234", reseller: "Maria Silva", date: "2024-07-18", total: "R$ 1.200,00", status: "Entregue" },

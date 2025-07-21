@@ -40,7 +40,7 @@ export default function ProductDetailPage() {
     const fetchProduct = async () => {
       try {
         // In a real app, fetch from API: const res = await fetch(`/api/products/${productId}`);
-        // const data = await res.json();
+        // const data = await res = await res.json();
         const fetchedProduct = { ...mockProduct, id: productId };
         setProduct(fetchedProduct);
         setSelectedImage(fetchedProduct.imageUrls[0]);

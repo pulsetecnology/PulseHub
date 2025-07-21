@@ -200,29 +200,6 @@ export function checkResellerAccess(resellerId: string, supplierId: string) {
   return !!relation;
 }
 
-// Função para obter todos os produtos disponíveis para um revendedor
-export function getResellerProducts(resellerId: string) {
-  // Em uma implementação real, isso buscaria produtos do banco de dados
-  // Aqui estamos apenas simulando
-  const approvedSuppliers = getResellerSuppliers(resellerId)
-    .map(supplier => supplier.id);
-  
-  // Filtrar produtos que pertencem aos fornecedores aprovados
-  return mockProducts.filter(product => 
-    product.supplierId && approvedSuppliers.includes(product.supplierId)
-  ).map(product => {
-    // Adicionar informações de comissão
-    const relation = supplierResellerRelations.find(
-      r => r.supplierId === product.supplierId && r.resellerId === resellerId
-    );
-    
-    return {
-      ...product,
-      commission: relation?.commission || 0
-    };
-  });
-}
-
 // Mock de produtos para demonstração
 export const mockProducts = [
   {

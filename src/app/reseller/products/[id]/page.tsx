@@ -121,9 +121,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Galeria de imagens */}
-          <div className="space-y-4">
+        {/* Galeria de imagens */}
+        <div className="space-y-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
               <div className="relative aspect-square">
                 <ImageFallback
@@ -154,7 +153,7 @@ export default function ProductDetailPage() {
                   >
                     <ImageFallback
                       src={url}
-                      alt={`${product.name} - Imagem ${index + 1}`}
+                    alt={`${product.name} - Imagem ${index + 1}`}
                       width={64}
                       height={64}
                       className="w-full h-full object-cover"
@@ -168,98 +167,96 @@ export default function ProductDetailPage() {
           {/* Informações do produto */}
           <div className="space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {formatPrice(product.price)}
-                  </h2>
-                  {product.commission !== undefined && (
-                    <div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-3 py-1 rounded-md flex items-center">
-                      <FiDollarSign className="mr-1" />
-                      <span>
-                        Comissão: {formatPrice(calculateCommission(product.price, product.commission))} ({product.commission}%)
-                      </span>
-                    </div>
-                  )}
-                </div>
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                  {formatPrice(product.price)}
+                </h2>
+                {product.commission !== undefined && (
+                  <div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-3 py-1 rounded-md flex items-center">
+                    <FiDollarSign className="mr-1" />
+                    <span>
+                      Comissão: {formatPrice(calculateCommission(product.price, product.commission))} ({product.commission}%)
+                    </span>
+                  </div>
+                )}
+              </div>
 
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                    Descrição
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                  Descrição
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {product.description || "Sem descrição disponível."}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center mb-2">
+                  <FiTag className="mr-2 text-gray-500 dark:text-gray-400" />
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                    Categoria
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {product.description || "Sem descrição disponível."}
-                  </p>
                 </div>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+                </p>
+              </div>
 
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center mb-2">
-                    <FiTag className="mr-2 text-gray-500 dark:text-gray-400" />
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                      Categoria
-                    </h3>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center mb-2">
-                    <FiUser className="mr-2 text-gray-500 dark:text-gray-400" />
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                      Público-alvo
-                    </h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {product.targetAudiences.map((audience) => (
-                      <span
-                        key={audience}
-                        className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm"
-                      >
-                        {audience}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                    Tamanhos disponíveis
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center mb-2">
+                  <FiUser className="mr-2 text-gray-500 dark:text-gray-400" />
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                    Público-alvo
                   </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((size) => (
-                      <span
-                        key={size}
-                        className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md text-sm"
-                      >
-                        {size}
-                      </span>
-                    ))}
-                  </div>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.targetAudiences.map((audience) => (
+                    <span
+                      key={audience}
+                      className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm"
+                    >
+                      {audience}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                    Fornecedor
-                  </h3>
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        {product.supplierName?.charAt(0).toUpperCase() || "?"}
-                      </span>
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                  Tamanhos disponíveis
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (
+                    <span
+                      key={size}
+                      className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md text-sm"
+                    >
+                      {size}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                  Fornecedor
+                </h3>
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      {product.supplierName?.charAt(0).toUpperCase() || "?"}
+                    </span>
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {product.supplierName}
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {product.supplierName}
-                      </div>
-                      <Link
-                        href={`/reseller/products?supplierId=${product.supplierId}`}
-                        className="text-xs text-primary hover:text-primary-hover"
-                      >
-                        Ver todos os produtos deste fornecedor
-                      </Link>
-                    </div>
+                    <Link
+                      href={`/reseller/products?supplierId=${product.supplierId}`}
+                      className="text-xs text-primary hover:text-primary-hover"
+                    >
+                      Ver todos os produtos deste fornecedor
+                    </Link>
                   </div>
                 </div>
               </div>

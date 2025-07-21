@@ -140,7 +140,7 @@ export default function TransactionsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{item.date}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{item.total}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(item.status)}</td>
-                    {viewType === 'quotes' && <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{(item as any).validUntil}</td>}
+                    {viewType === 'quotes' && <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-400">{(item as any).validUntil}</td>}
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <Link href={`/reseller/${viewType}/${item.id}`} className="text-primary hover:underline">
                         Ver Detalhes

@@ -242,11 +242,8 @@ interface Category {
 const DEFAULT_TARGET_AUDIENCES: TargetAudience[] = [
   { id: 'masculino', name: 'Masculino' },
   { id: 'feminino', name: 'Feminino' },
-  { id: 'infantil', name: 'Infantil' },
   { id: 'unissex', name: 'Unissex' },
-  { id: 'plus-size', name: 'Plus Size' },
-  { id: 'gestante', name: 'Gestante' },
-  { id: 'pet', name: 'Pet' },
+  { id: 'infantil', name: 'Infantil' },
 ];
 
 // Tamanhos padrão por tipo de produto
